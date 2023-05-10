@@ -1,0 +1,200 @@
+openapi: 3.0.1
+info:
+  title: WSO2 API Manager - Artifact Migrator API
+  description: |
+    This document specifies a **RESTful API** for WSO2 **API Manager** - **Artifact Migrator API**.
+  contact:
+    name: WSO2
+    url: https://wso2.com/api-manager/
+    email: architecture@wso2.com
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  version: v1
+servers:
+  - url: https://apis.wso2.com/api/am/ctl-artifact-converter/v1
+paths:
+  ######################################################
+  # The "API Collection" resource APIs
+  ######################################################
+  /ctl-artifact/migrate:
+    post:
+      tags:
+        - Migrate Artifact
+      summary: |
+        Migrate export API artifacts from one version to another
+      description: |
+        This operation provides you a list of available APIs qualifying under a given search condition.
+
+        Each retrieved API is represented with a minimal amount of attributes. If you want to get complete details of an API, you need to use **Get details of an API** operation.
+      parameters:
+        - $ref: '#/components/parameters/srcVersion'
+        - $ref: '#/components/parameters/targetVersion'
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              required:
+                - file
+              properties:
+                file:
+                  type: string
+                  description: Zip archive consisting on exported API configuration
+                  format: binary
+      responses:
+        200:
+          description: |
+            OK.
+            List of qualifying APIs is returned.
+          headers:
+            ETag:
+              description: |
+                Entity Tag of the response resource. Used by caches, or in conditional requests (Will be supported in future).
+              schema:
+                type: string
+            Content-Type:
+              description: The content type of the body.
+              schema:
+                type: string
+          content:
+            application/zip:
+              schema:
+                type: string
+                format: binary
+        403:
+          $ref: '#/components/responses/Forbidden'
+        404:
+          $ref: '#/components/responses/NotFound'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+      x-code-samples:
+        - lang: Curl
+          source: 'curl -k -H "Authorization: Bearer ae4eae22-3f65-387b-a171-d37eaa366fa8"
+          "https://127.0.0.1:9443/api/am/publisher/v4/apis"'
+      operationId: migrateArtifact
+
+components:
+  schemas:
+    Error:
+      title: Error object returned with 4XX HTTP Status
+      required:
+        - code
+        - message
+      type: object
+      properties:
+        code:
+          type: integer
+          format: int64
+        message:
+          type: string
+          description: Error message.
+        description:
+          type: string
+          description: |
+            A detail description about the error message.
+        moreInfo:
+          type: string
+          description: |
+            Preferably an url with more details about the error.
+        error:
+          type: array
+          description: |
+            If there are more than one error list them out.
+            For example, list out validation errors by each field.
+          items:
+            $ref: '#/components/schemas/ErrorListItem'
+    ErrorListItem:
+      title: Description of individual errors that may have occurred during a request.
+      required:
+        - code
+        - message
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+          description: |
+            Description about individual errors occurred
+        description:
+          type: string
+          description: |
+            A detail description about the error message.
+  responses:
+    Forbidden:
+      description: Forbidden. The request must be conditional but no condition has
+        been specified.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            code: 403
+            message: Forbidden
+            description: The request must be conditional but no condition has been
+              specified
+            moreInfo: ""
+            error: []
+    InternalServerError:
+      description: Internal Server Error.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            code: 500
+            message: Internal Server Error
+            description: The server encountered an internal error. Please contact
+              administrator.
+            moreInfo: ""
+            error: []
+    NotFound:
+      description: Not Found. The specified resource does not exist.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            code: 404
+            message: Not Found
+            description: The specified resource does not exist
+            moreInfo: ""
+            error: []
+    Unauthorized:
+      description: Unauthorized. The user is not authorized.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            code: 401
+            message: Unauthorized
+            description: The user is not authorized
+            moreInfo: ""
+            error: []
+  parameters:
+    srcVersion:
+      name: srcVersion
+      in: query
+      description: |
+        Source artifact version
+      schema:
+        type: string
+        default: '3.2.0'
+    targetVersion:
+      name: targetVersion
+      in: query
+      description: |
+        Target artifact version
+      schema:
+        type: string
+        default: '4.2.0'
+  securitySchemes:
+    OAuth2Security:
+      type: oauth2
+      flows:
+        password:
+          tokenUrl: https://localhost:9443/oauth2/token
+          scopes:
+            openid: Authorize access to user details
+            apim:artifact_migrate: Migrate API Artifact
