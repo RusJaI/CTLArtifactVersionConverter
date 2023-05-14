@@ -22,9 +22,9 @@ public class V32Sequences extends Sequences {
         File srcSequencesDirectory = new File(pathToSequences);
 
         if (srcSequencesDirectory.exists()) {
-            List<JsonObject> inSequences = SequencesMappingUtil.readCustomV32Sequences(pathToSequences, Constants.IN);
-            List<JsonObject> outSequences = SequencesMappingUtil.readCustomV32Sequences(pathToSequences, Constants.OUT);
-            List<JsonObject> faultSequences = SequencesMappingUtil.readCustomV32Sequences(pathToSequences, Constants.FAULT);
+            List<JsonObject> inSequences = SequencesMappingUtil.readV32Sequences(pathToSequences, Constants.IN);
+            List<JsonObject> outSequences = SequencesMappingUtil.readV32Sequences(pathToSequences, Constants.OUT);
+            List<JsonObject> faultSequences = SequencesMappingUtil.readV32Sequences(pathToSequences, Constants.FAULT);
 
             sequencesMap.put(Constants.IN, inSequences);
             sequencesMap.put(Constants.OUT, outSequences);

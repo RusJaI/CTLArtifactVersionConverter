@@ -8,7 +8,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.apimgt.ctl.artifact.converter.Constants;
 import org.wso2.carbon.apimgt.ctl.artifact.converter.exception.CTLArtifactConversionException;
-import org.wso2.carbon.apimgt.ctl.artifact.converter.model.v32.V32Sequences;
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
 
@@ -81,32 +80,42 @@ public class ConfigFileUtil {
 
     public static void writeV42DocumentContentFile(String srcDocDirectoryPath, String targetDocDirectoryPath,
                                                  JsonObject document) throws CTLArtifactConversionException {
-        String inlineContentsDirectoryPath = srcDocDirectoryPath + File.separator + Constants.INLINE_CONTENTS_DIRECTORY;
-        String fileContentsDirectoryPath = srcDocDirectoryPath + File.separator + Constants.FILE_CONTENTS_DIRECTORY;
+        String documentType = document.get("sourceType").getAsString();
+        if (documentType.equals(Constants.URL_DOC_TYPE)) {
+            return;
+        }
 
-        String sourceType = document.get("sourceType").getAsString();
         String docName = document.get("name").getAsString();
-        File srcFile = new File(inlineContentsDirectoryPath + File.separator + docName);
-        File targetFile = new File(targetDocDirectoryPath + File.separator + docName + File.separator + docName);
-
+        File srcFile = null;
+        File targetFile = null;
         try {
-            if (Constants.FILE_DOC_TYPE.equals(sourceType)) {
-                String filepath = document.get("fileName").getAsString();
-                srcFile = new File(fileContentsDirectoryPath + File.separator + filepath);
-                targetFile = new File(targetDocDirectoryPath + File.separator + docName + File.separator + filepath);
+            if (documentType.equals(Constants.INLINE_DOC_TYPE) || documentType.equals(Constants.MARKDOWN_DOC_TYPE)) {
+                String inlineContentsDirectoryPath = srcDocDirectoryPath + File.separator +
+                        Constants.INLINE_CONTENTS_DIRECTORY;
+                srcFile = new File(inlineContentsDirectoryPath + File.separator + docName);
+                targetFile = new File(targetDocDirectoryPath + File.separator + docName +
+                        File.separator + docName);
+            } else if (documentType.equals(Constants.FILE_DOC_TYPE)) {
+                String fileContentsDirectoryPath = srcDocDirectoryPath + File.separator +
+                        Constants.FILE_CONTENTS_DIRECTORY;
+                String filepath = CommonUtil.readElementAsString(document, "fileName");
+                if (filepath != null) {
+                    srcFile = new File(fileContentsDirectoryPath + File.separator + filepath);
+                    targetFile = new File(targetDocDirectoryPath + File.separator + docName +
+                            File.separator + filepath);
+                }
             }
 
-            if (srcFile.exists()) {
+            if (srcFile != null && srcFile.exists() && targetFile != null) {
                 FileUtils.copyFile(srcFile, targetFile);
             } else {
-                String msg = "Document content not found for document: " + docName + " of type: " + sourceType + " at "
-                        + srcFile.getAbsolutePath();
-                //todo: log a warning, this is not an error scenario
+                //this is not an error scenario - just the document is not yet associated with any content or file
+                String msg = "Document content not found for document: " + docName + " of type: " + documentType;
+                log.info(msg);
             }
 
         } catch (IOException e) {
             String msg = "Error while writing document content file for document: " + docName;
-            //log.error(msg, e);
             throw new CTLArtifactConversionException(msg, e);
         }
     }

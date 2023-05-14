@@ -1,23 +1,28 @@
 package org.wso2.carbon.apimgt.ctl.artifact.converter.util;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.apimgt.ctl.artifact.converter.Constants;
 import org.wso2.carbon.apimgt.ctl.artifact.converter.exception.CTLArtifactConversionException;
 
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.Enumeration;
-import java.util.Map;
+import java.util.*;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
+import java.util.zip.ZipOutputStream;
 
 public class CommonUtil {
+    private static final Log log = LogFactory.getLog(CommonUtil.class);
     public static boolean validateSrcAndTargetVersions(String srcVersion, String targetVersion) {
         if (Arrays.asList(Constants.supportedSourceVersions).contains(srcVersion) &&
                 Arrays.asList(Constants.supportedTargetVersions).contains(targetVersion)) {
@@ -163,6 +168,131 @@ public class CommonUtil {
         } catch (IOException e) {
             throw new CTLArtifactConversionException("Error while extracting archive", e);
         }
+    }
+
+    /**
+     * Archive a provided source directory to a zipped file.
+     *
+     * @param sourceDirectory Source directory
+     * @throws CTLArtifactConversionException If an error occurs while generating archive
+     */
+    public static void archiveDirectory(String sourceDirectory) throws CTLArtifactConversionException {
+
+        File directoryToZip = new File(sourceDirectory);
+        List<File> fileList = new ArrayList<>();
+        getAllFiles(directoryToZip, fileList);
+        writeArchiveFile(directoryToZip, fileList);
+        if (log.isDebugEnabled()) {
+            log.debug("Archived API generated successfully from source: " + sourceDirectory);
+        }
+    }
+
+    /**
+     * Recursively retrieve all the files included in the source directory to be archived.
+     *
+     * @param sourceDirectory Source directory
+     * @param fileList        List of files
+     */
+    private static void getAllFiles(File sourceDirectory, List<File> fileList) {
+        File[] files = sourceDirectory.listFiles();
+        if (files != null) {
+            for (File file : files) {
+                fileList.add(file);
+                if (file.isDirectory()) {
+                    getAllFiles(file, fileList);
+                }
+            }
+        }
+    }
+
+    /**
+     * Generate archive file.
+     *
+     * @param directoryToZip Location of the archive
+     * @param fileList       List of files to be included in the archive
+     * @throws CTLArtifactConversionException If an error occurs while adding files to the archive
+     */
+    private static void writeArchiveFile(File directoryToZip, List<File> fileList) throws CTLArtifactConversionException {
+        try (FileOutputStream fileOutputStream = new FileOutputStream(directoryToZip.getPath() + ".zip");
+             ZipOutputStream zipOutputStream = new ZipOutputStream(fileOutputStream)) {
+            for (File file : fileList) {
+                if (!file.isDirectory()) {
+                    addToArchive(directoryToZip, file, zipOutputStream);
+                }
+            }
+        } catch (IOException e) {
+            String errorMessage = "I/O error while adding files to archive";
+            throw new CTLArtifactConversionException(errorMessage, e);
+        }
+    }
+
+    /**
+     * Add files of the directory to the archive.
+     *
+     * @param directoryToZip  Location of the archive
+     * @param file            File to be included in the archive
+     * @param zipOutputStream Output stream
+     * @throws CTLArtifactConversionException If an error occurs while writing files to the archive
+     */
+    private static void addToArchive(File directoryToZip, File file, ZipOutputStream zipOutputStream)
+            throws CTLArtifactConversionException {
+        try (FileInputStream fileInputStream = new FileInputStream(file)) {
+            // Get relative path from archive directory to the specific file
+            String zipFilePath = file.getCanonicalPath().substring(directoryToZip.getCanonicalPath().length() + 1);
+            if (File.separatorChar != Constants.ZIP_FILE_SEPARATOR) {
+                zipFilePath = zipFilePath.replace(File.separatorChar, Constants.ZIP_FILE_SEPARATOR);
+            }
+            ZipEntry zipEntry = new ZipEntry(zipFilePath);
+            zipOutputStream.putNextEntry(zipEntry);
+
+            IOUtils.copy(fileInputStream, zipOutputStream);
+
+            zipOutputStream.closeEntry();
+        } catch (IOException e) {
+            String errorMessage = "I/O error while writing files to archive";
+            throw new CTLArtifactConversionException(errorMessage, e);
+        }
+    }
+
+    public static String readElementAsString(JsonObject object, String key) {
+        String value = null;
+        JsonElement element = object.get(key);
+        if (element != null) {
+            value = element.getAsString();
+        }
+        return value;
+    }
+
+    public static boolean readElementAsBoolean(JsonObject object, String key) {
+        boolean value = false;
+        JsonElement element = object.get(key);
+        if (element != null) {
+            value = element.getAsBoolean();
+        }
+        return value;
+    }
+
+    public static JsonArray readElementAsJsonArray(JsonObject object, String key) {
+        JsonArray value = null;
+        JsonElement element = object.get(key);
+        if (element != null) {
+            value = element.getAsJsonArray();
+        }
+        return value;
+    }
+
+    public static String[] fromStringToArray(String str, String delimiter) {
+        if (StringUtils.isEmpty(str)) {
+            return new String[0];
+        } else {
+            return Arrays.stream(str.split(delimiter)).map(String::trim).toArray(String[]::new);
+        }
+    }
+
+    public static JsonArray toJsonArray(String[] array) {
+        JsonArray jsonArray = new JsonArray();
+        Arrays.stream(array).map(String::trim).forEach(jsonArray::add);
+        return jsonArray;
     }
 
     public static JsonObject convertMapToJsonObject(Map map) {

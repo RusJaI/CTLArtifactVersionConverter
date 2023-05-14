@@ -4,7 +4,7 @@ import org.wso2.carbon.apimgt.ctl.artifact.converter.exception.CTLArtifactConver
 import org.wso2.carbon.apimgt.ctl.artifact.converter.impl.APIInfoVersionConverter;
 import org.wso2.carbon.apimgt.ctl.artifact.converter.impl.APISequencesConverter;
 import org.wso2.carbon.apimgt.ctl.artifact.converter.impl.DocumentVersionConverter;
-import org.wso2.carbon.apimgt.ctl.artifact.converter.impl.EPCertificateVersionConverter;
+import org.wso2.carbon.apimgt.ctl.artifact.converter.impl.CertificateVersionConverter;
 import org.wso2.carbon.apimgt.ctl.artifact.converter.util.CommonUtil;
 
 import java.util.ArrayList;
@@ -32,7 +32,7 @@ public class ArtifactConversionManager {
     public void init() throws CTLArtifactConversionException {
         if (CommonUtil.validateSrcAndTargetVersions(srcVersion, targetVersion)) {
             converters.add(new DocumentVersionConverter(srcVersion, targetVersion, srcPath, targetPath, format));
-            converters.add(new EPCertificateVersionConverter(srcVersion, targetVersion, srcPath, targetPath, format));
+            converters.add(new CertificateVersionConverter(srcVersion, targetVersion, srcPath, targetPath, format));
             converters.add(new APIInfoVersionConverter(srcVersion, targetVersion, srcPath, targetPath, format));
             converters.add(new APISequencesConverter(srcVersion, targetVersion, srcPath, targetPath, format));
         } else {

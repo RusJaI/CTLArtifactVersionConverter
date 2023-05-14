@@ -27,14 +27,13 @@ public class DocumentsMappingUtil {
             v42Document.addProperty("sourceType", v32document.get("sourceType").getAsString());
             v42Document.addProperty("visibility", v32document.get("visibility").getAsString());
 
-            if (v32document.get("sourceType").getAsString().equals("INLINE")) {
-               //todo: implement
-            } else if (v32document.get("sourceType").getAsString().equals("FILE")) {
-                v42Document.addProperty("fileName", v32document.get("filePath").getAsString());
+            if (v32document.get("sourceType").getAsString().equals("FILE")) {
+                String filePath = v32document.get("filePath") != null ? v32document.get("filePath").getAsString() : null;
+                if (filePath != null) {
+                    v42Document.addProperty("fileName", v32document.get("filePath").getAsString());
+                }
             } else if (v32document.get("sourceType").getAsString().equals("URL")) {
-                //todo: implement
-            } else if (v32document.get("sourceType").getAsString().equals("MARKDOWN")) {
-                //todo: implement
+                v42Document.addProperty("sourceUrl", v32document.get("sourceUrl").getAsString());
             }
             v42documents.add(v42Document);
         }

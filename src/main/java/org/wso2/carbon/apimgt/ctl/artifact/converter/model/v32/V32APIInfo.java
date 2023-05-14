@@ -13,7 +13,7 @@ import java.io.File;
 import java.util.Map;
 
 public class V32APIInfo extends APIInfo {
-    private static final Log log = LogFactory.getLog(V32EPCertificates.class);
+    private static final Log log = LogFactory.getLog(V32Certificates.class);
     @Override
     public void importAPIInfo(String srcPath) throws CTLArtifactConversionException {
         String pathToMetaInfo = srcPath + File.separator + Constants.META_INFO_DIRECTORY;

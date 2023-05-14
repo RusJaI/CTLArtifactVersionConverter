@@ -73,11 +73,18 @@ public class SequencesMappingUtil {
 
         JsonArray flows = new JsonArray();
         flows.add(flow);
-        v42PolicyObj.addProperty("applicableFlows", flows.toString());
+        v42PolicyObj.add("applicableFlows", flows);
 
-        v42PolicyObj.addProperty("supportedGateways", Constants.GATEWAY_TYPE_SYNAPSE);
-        v42PolicyObj.addProperty("supportedApiTypes", "HTTP");
-        v42PolicyObj.addProperty("policyAttributes",new JsonArray().toString());
+        JsonArray supportedGateways = new JsonArray();
+        supportedGateways.add(Constants.GATEWAY_TYPE_SYNAPSE);
+        v42PolicyObj.add("supportedGateways", supportedGateways);
+
+        //todo: check and fix this to add correct API Types
+        JsonArray supportedAPITypes = new JsonArray();
+        supportedAPITypes.add("HTTP");
+        v42PolicyObj.add("supportedApiTypes", supportedAPITypes);
+
+        v42PolicyObj.add("policyAttributes",new JsonArray());
 
         //store sequence content as a property
         populatePolicySpec(srcSequence.get("content").getAsString(), v42PolicyObj);
@@ -130,24 +137,37 @@ public class SequencesMappingUtil {
         }
     }
 
-    public static List<JsonObject> readCustomV32Sequences(String pathToSequences, String direction) throws
+    public static List<JsonObject> readV32Sequences(String pathToSequences, String direction) throws
             CTLArtifactConversionException {
-        String pathToCustomSequences = pathToSequences + File.separator + direction + Constants.SEQUENCES_SUFFIX +
-                File.separator + Constants.CUSTOM;
-        File srcCustomSequencesDirectory = new File(pathToCustomSequences);
-
         List<JsonObject> sequences = new ArrayList<>();
-        if (srcCustomSequencesDirectory.exists()) {
-            File[] files = srcCustomSequencesDirectory.listFiles();
-            for (File file : files) {
-                String sequenceFileName = file.getName();
-                String pathToCustomSequence = pathToCustomSequences + File.separator + sequenceFileName;
-                String sequenceContent = ConfigFileUtil.readFileContentAsString(pathToCustomSequence);
+        sequences.addAll(readV32Sequences(pathToSequences, direction, Constants.CUSTOM));
+        sequences.addAll(readV32Sequences(pathToSequences, direction, Constants.COMMON));
+        return sequences;
+    }
 
-                JsonObject seqObj = new JsonObject();
-                seqObj.addProperty("name", sequenceFileName.replace(Constants.XML_EXTENSION, ""));
-                seqObj.addProperty("content", sequenceContent);
-                sequences.add(seqObj);
+    public static List<JsonObject> readV32Sequences(String pathToSequences, String direction, String type) throws
+            CTLArtifactConversionException {
+        List<JsonObject> sequences = new ArrayList<>();
+        pathToSequences = pathToSequences + File.separator + direction + Constants.SEQUENCES_SUFFIX;
+        if (Constants.CUSTOM.equals(type)) {
+            pathToSequences = pathToSequences + File.separator + Constants.CUSTOM;
+        }
+
+        File srcSequencesDirectory = new File(pathToSequences);
+        if (srcSequencesDirectory.exists()) {
+            File[] files = srcSequencesDirectory.listFiles();
+            for (File file : files) {
+                //in case the sequence type is common, we need to skip the custom sequences sub-directory
+                if (!file.isDirectory()) {
+                    String sequenceFileName = file.getName();
+                    String pathToSequence = pathToSequences + File.separator + sequenceFileName;
+                    String sequenceContent = ConfigFileUtil.readFileContentAsString(pathToSequence);
+
+                    JsonObject seqObj = new JsonObject();
+                    seqObj.addProperty("name", sequenceFileName.replace(Constants.XML_EXTENSION, ""));
+                    seqObj.addProperty("content", sequenceContent);
+                    sequences.add(seqObj);
+                }
             }
         } else {
             //log and exit

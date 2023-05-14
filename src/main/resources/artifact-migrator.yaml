@@ -1,8 +1,8 @@
 openapi: 3.0.1
 info:
-  title: WSO2 API Manager - Artifact Migrator API
+  title: WSO2 API Manager - CTL Artifact Converter API
   description: |
-    This document specifies a **RESTful API** for WSO2 **API Manager** - **Artifact Migrator API**.
+    This document specifies a **RESTful API** for WSO2 **API Manager** - **Artifact Converter API**.
   contact:
     name: WSO2
     url: https://wso2.com/api-manager/
@@ -17,19 +17,21 @@ paths:
   ######################################################
   # The "API Collection" resource APIs
   ######################################################
-  /ctl-artifact/migrate:
+  /ctl-artifact/convert:
     post:
       tags:
         - Migrate Artifact
       summary: |
-        Migrate export API artifacts from one version to another
+        Convert export API artifacts from one version to another
       description: |
-        This operation provides you a list of available APIs qualifying under a given search condition.
-
-        Each retrieved API is represented with a minimal amount of attributes. If you want to get complete details of an API, you need to use **Get details of an API** operation.
+        This operation allows to convert CTL artifacts from one version to another.
+        
+        Note : As of now only 3.2.0 to 4.2.0 conversion is supported.
       parameters:
         - $ref: '#/components/parameters/srcVersion'
         - $ref: '#/components/parameters/targetVersion'
+        - $ref: '#/components/parameters/exportFormat'
+        - $ref: '#/components/parameters/type'
       requestBody:
         content:
           multipart/form-data:
@@ -71,7 +73,7 @@ paths:
         - lang: Curl
           source: 'curl -k -H "Authorization: Bearer ae4eae22-3f65-387b-a171-d37eaa366fa8"
           "https://127.0.0.1:9443/api/am/publisher/v4/apis"'
-      operationId: migrateArtifact
+      operationId: convertCTLArtifact
 
 components:
   schemas:
@@ -180,6 +182,8 @@ components:
         Source artifact version
       schema:
         type: string
+        enum:
+          - 3.2.0
         default: '3.2.0'
     targetVersion:
       name: targetVersion
@@ -188,7 +192,31 @@ components:
         Target artifact version
       schema:
         type: string
+        enum:
+          - 4.2.0
         default: '4.2.0'
+    exportFormat:
+      name: exportFormat
+      in: query
+      description: |
+        Export artifact format (YAML or JSON)
+      schema:
+        type: string
+        enum:
+          - YAML
+          - JSON
+        default: 'YAML'
+    type:
+      name: type
+      in: query
+      description: |
+        Export artifact type (API or APIProduct)
+      schema:
+        type: string
+        enum:
+          - API
+          - APIProduct
+        default: 'API'
   securitySchemes:
     OAuth2Security:
       type: oauth2

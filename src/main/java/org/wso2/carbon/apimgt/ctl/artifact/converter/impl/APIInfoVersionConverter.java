@@ -22,7 +22,7 @@ public class APIInfoVersionConverter extends ResourceVersionConverter {
         srcAPIInfo.importAPIInfo(srcPath);
 
         //Map imported API info to target API Info format
-        APIInfoMappingUtil.mapAPIInfo(srcAPIInfo, targetAPIInfo, srcVersion, targetVersion);
+        APIInfoMappingUtil.mapAPIInfo(srcAPIInfo, targetAPIInfo, srcVersion, targetVersion, srcPath);
 
         //Export mapped certificates to target artifact
         targetAPIInfo.exportAPIInfo(srcPath, targetPath, exportFormat);

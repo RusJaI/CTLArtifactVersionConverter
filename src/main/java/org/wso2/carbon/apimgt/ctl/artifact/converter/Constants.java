@@ -5,6 +5,7 @@ public class Constants {
     public static final String V420 = "4.2.0";
     public static final String DOCS_DIRECTORY = "Docs";
     public static final String ENDPOINT_CERTIFICATES_DIRECTORY = "Endpoint-certificates";
+    public static final String CLIENT_CERTIFICATES_DIRECTORY = "Client-certificates";
     public static final String META_INFO_DIRECTORY = "Meta-information";
     public static final String SEQUENCES_DIRECTORY = "Sequences";
     public static final String POLICIES_DIRECTORY = "Policies";
@@ -24,6 +25,7 @@ public class Constants {
     public static final String SWAGGER_JSON = "swagger.json";
     public static final String SWAGGER = "swagger";
     public static final String ENDPOINT_CERTIFICATES_CONFIG = "endpoint_certificates";
+    public static final String CLIENT_CERTIFICATES_CONFIG = "client_certificates";
     public static final String API_CONFIG = "api";
     public static final String YAML_FORMAT = "YAML";
     public static final String JSON_FORMAT = "JSON";
@@ -35,14 +37,17 @@ public class Constants {
     public static final String DOCUMENT_TYPE = "document";
     public static final String POLICY_SPEC_TYPE = "operation_policy_specification";
     public static final String ENDPOINT_CERTIFICATES_TYPE = "endpoint_certificates";
+    public static final String CLIENT_CERTIFICATES_TYPE = "client_certificates";
     public static final String APIM_420_VERSION = "4.2.0";
     public static final String INLINE_DOC_TYPE = "INLINE";
     public static final String FILE_DOC_TYPE = "FILE";
     public static final String MARKDOWN_DOC_TYPE = "MARKDOWN";
+    public static final String URL_DOC_TYPE = "URL";
     public static final String YAML_EXTENSION = ".yaml";
     public static final String JSON_EXTENSION = ".json";
     public static final String XML_EXTENSION = ".xml";
     public static final String CRT_EXTENSION = ".crt";
+    public static final String ZIP_EXTENSION = ".zip";
     public static final String BEGIN_CERTIFICATE_STRING = "-----BEGIN CERTIFICATE-----";
     public static final String END_CERTIFICATE_STRING = "-----END CERTIFICATE-----";
     public static final String IN = "in";
@@ -52,6 +57,7 @@ public class Constants {
     public static final String RESPONSE_FLOW = "response";
     public static final String SEQUENCES_SUFFIX = "-sequence";
     public static final String CUSTOM = "Custom";
+    public static final String COMMON = "Common";
     public static final String POLICY_CATEGORY_MEDIATION = "Mediation";
     public static final String GATEWAY_TYPE_SYNAPSE = "Synapse";
     public static final String INDENT_PROPERTY = "{http://xml.apache.org/xslt}indent-amount";
@@ -74,5 +80,8 @@ public class Constants {
     public static final String PUBLISHED = "PUBLISHED";
     public static final String GRAPHQL = "GRAPHQL";
     public static final String GRAPHQL_SCHEMA_FILE_NAME = "schema.graphql";
+    public static final String ENDPOINT_CERT_TYPE = "ENDPOINT_CERTIFICATE";
+    public static final String CLIENT_CERT_TYPE = "CLIENT_CERTIFICATE";
+    public static final String DEFAULT_SECURITY = "default";
 
 }
