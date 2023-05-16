@@ -20,20 +20,18 @@ public class DocumentsMappingUtil {
         List<JsonObject> v42documents = new ArrayList<>();
         for (JsonObject v32document : v32documents) {
             JsonObject v42Document = new JsonObject();
-            v42Document.addProperty("documentId", v32document.get("id").getAsString());
-            v42Document.addProperty("type", v32document.get("type").getAsString());
-            v42Document.addProperty("name", v32document.get("name").getAsString());
-            v42Document.addProperty("summary", v32document.get("summary").getAsString());
-            v42Document.addProperty("sourceType", v32document.get("sourceType").getAsString());
-            v42Document.addProperty("visibility", v32document.get("visibility").getAsString());
+            v42Document.addProperty("documentId", CommonUtil.readElementAsString(v32document, "id"));
+            v42Document.addProperty("type", CommonUtil.readElementAsString(v32document, "type"));
+            v42Document.addProperty("name", CommonUtil.readElementAsString(v32document, "name"));
+            v42Document.addProperty("summary", CommonUtil.readElementAsString(v32document, "summary"));
+            v42Document.addProperty("sourceType", CommonUtil.readElementAsString(v32document, "sourceType"));
+            v42Document.addProperty("visibility", CommonUtil.readElementAsString(v32document, "visibility"));
 
-            if (v32document.get("sourceType").getAsString().equals("FILE")) {
-                String filePath = v32document.get("filePath") != null ? v32document.get("filePath").getAsString() : null;
-                if (filePath != null) {
-                    v42Document.addProperty("fileName", v32document.get("filePath").getAsString());
-                }
-            } else if (v32document.get("sourceType").getAsString().equals("URL")) {
-                v42Document.addProperty("sourceUrl", v32document.get("sourceUrl").getAsString());
+            String sourceType = CommonUtil.readElementAsString(v32document, "sourceType");
+            if ("FILE".equals(sourceType)) {
+                v42Document.addProperty("fileName", CommonUtil.readElementAsString(v32document, "filePath"));
+            } else if ("URL".equals(sourceType)) {
+                v42Document.addProperty("sourceUrl", CommonUtil.readElementAsString(v32document, "sourceUrl"));
             }
             v42documents.add(v42Document);
         }

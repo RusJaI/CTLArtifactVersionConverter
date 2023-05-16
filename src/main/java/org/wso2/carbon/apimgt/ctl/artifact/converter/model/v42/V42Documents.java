@@ -3,7 +3,7 @@ package org.wso2.carbon.apimgt.ctl.artifact.converter.model.v42;
 import com.google.gson.JsonObject;
 import org.wso2.carbon.apimgt.ctl.artifact.converter.Constants;
 import org.wso2.carbon.apimgt.ctl.artifact.converter.exception.CTLArtifactConversionException;
-import org.wso2.carbon.apimgt.ctl.artifact.converter.model.DocumentsDirectory;
+import org.wso2.carbon.apimgt.ctl.artifact.converter.model.Documents;
 import org.wso2.carbon.apimgt.ctl.artifact.converter.util.CommonUtil;
 import org.wso2.carbon.apimgt.ctl.artifact.converter.util.ConfigFileUtil;
 
@@ -12,28 +12,42 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
-public class V42DocumentsDirectory extends DocumentsDirectory {
+public class V42Documents extends Documents {
     @Override
     public void importDocuments(String srcPath) {
         //not implemented yet
     }
 
+    /**
+     * Export documents
+     * @param targetPath    target directory path
+     * @param srcPath       source directory path
+     * @param exportFormat  export format
+     * @throws CTLArtifactConversionException   if an error occurs while exporting the documents
+     */
     @Override
     public void exportDocuments(String targetPath, String srcPath, String exportFormat) throws
             CTLArtifactConversionException {
         if (getDocuments() != null && !getDocuments().isEmpty()) {
             String targetDocsDirectory = targetPath + File.separator + Constants.DOCS_DIRECTORY;
-            String srcDocsDirectory = srcPath + File.separator + Constants.DOCS_DIRECTORY;
-
-            //clean documents directory
             CommonUtil.cleanDirectory(targetDocsDirectory);
 
+            String srcDocsDirectory = srcPath + File.separator + Constants.DOCS_DIRECTORY;
             for (JsonObject document : getDocuments()) {
                 exportDocument(document, srcDocsDirectory, targetDocsDirectory, exportFormat);
             }
         }
     }
 
+    /**
+     * Export a single document
+     *
+     * @param document      document to be exported
+     * @param srcPath       source directory path
+     * @param targetPath    target directory path
+     * @param exportFormat  export format
+     * @throws CTLArtifactConversionException if an error occurs while exporting the document
+     */
     private void exportDocument(JsonObject document, String srcPath, String targetPath, String exportFormat) throws
             CTLArtifactConversionException {
         try {
@@ -49,6 +63,5 @@ public class V42DocumentsDirectory extends DocumentsDirectory {
                     File.separator + Constants.DOCS_DIRECTORY;
             throw new CTLArtifactConversionException(msg, e);
         }
-
     }
 }

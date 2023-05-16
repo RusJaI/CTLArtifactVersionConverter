@@ -29,10 +29,10 @@ public class V42APIPolicies extends Sequences {
             for (Map.Entry<String, JsonObject> entry : sequencesMap.entrySet()) {
                 String policyName = entry.getKey();
                 JsonObject policy = entry.getValue();
-                String policyVersion = policy.get("version").getAsString();
+                String policyVersion = CommonUtil.readElementAsString(policy, "version");
                 String policyFileName = policyName + "_" + policyVersion;
 
-                String policySpec = policy.get("policySpec").getAsString();
+                String policySpec = CommonUtil.readElementAsString(policy, "policySpec");
                 policy.remove("policySpec");
 
                 String policyFilePath = targetPoliciesDirectory + File.separator + policyFileName;

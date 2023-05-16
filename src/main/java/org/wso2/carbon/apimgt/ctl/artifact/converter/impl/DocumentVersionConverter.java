@@ -4,15 +4,15 @@ import com.google.gson.JsonObject;
 import org.wso2.carbon.apimgt.ctl.artifact.converter.ResourceVersionConverter;
 import org.wso2.carbon.apimgt.ctl.artifact.converter.exception.CTLArtifactConversionException;
 import org.wso2.carbon.apimgt.ctl.artifact.converter.factory.ResourceFactory;
-import org.wso2.carbon.apimgt.ctl.artifact.converter.model.DocumentsDirectory;
+import org.wso2.carbon.apimgt.ctl.artifact.converter.model.Documents;
 import org.wso2.carbon.apimgt.ctl.artifact.converter.util.DocumentsMappingUtil;
 
 import java.util.List;
 
 
 public class DocumentVersionConverter extends ResourceVersionConverter {
-    DocumentsDirectory srcDocuments;
-    DocumentsDirectory targetDocuments;
+    Documents srcDocuments;
+    Documents targetDocuments;
 
     public DocumentVersionConverter(String srcVersion, String targetVersion, String srcPath, String targetPath,
                                     String exportFormat) {

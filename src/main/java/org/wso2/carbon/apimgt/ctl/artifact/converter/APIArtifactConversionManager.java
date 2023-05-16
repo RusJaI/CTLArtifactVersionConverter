@@ -10,8 +10,8 @@ import org.wso2.carbon.apimgt.ctl.artifact.converter.util.CommonUtil;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ArtifactConversionManager {
-    public List<ResourceVersionConverter> converters = new ArrayList<>();
+public class APIArtifactConversionManager {
+    private List<ResourceVersionConverter> converters = new ArrayList<>();
     private String srcVersion;
     private String targetVersion;
     private String srcPath;
@@ -19,8 +19,8 @@ public class ArtifactConversionManager {
     private String format;
 
 
-    public ArtifactConversionManager(String srcVersion, String targetVersion, String srcPath, String targetPath,
-                                     String format) throws CTLArtifactConversionException {
+    public APIArtifactConversionManager(String srcVersion, String targetVersion, String srcPath, String targetPath,
+                                        String format) throws CTLArtifactConversionException {
         this.srcVersion = srcVersion;
         this.targetVersion = targetVersion;
         this.srcPath = srcPath;
@@ -29,11 +29,11 @@ public class ArtifactConversionManager {
         init();
     }
 
-    public void init() throws CTLArtifactConversionException {
+    private void init() throws CTLArtifactConversionException {
         if (CommonUtil.validateSrcAndTargetVersions(srcVersion, targetVersion)) {
             converters.add(new DocumentVersionConverter(srcVersion, targetVersion, srcPath, targetPath, format));
             converters.add(new CertificateVersionConverter(srcVersion, targetVersion, srcPath, targetPath, format));
-            converters.add(new APIInfoVersionConverter(srcVersion, targetVersion, srcPath, targetPath, format));
+            converters.add(new APIInfoVersionConverter(srcVersion, targetVersion, srcPath, targetPath, false, format));
             converters.add(new APISequencesConverter(srcVersion, targetVersion, srcPath, targetPath, format));
         } else {
             String msg = "Invalid source or target version";

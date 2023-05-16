@@ -25,83 +25,47 @@ public class V42Certificates extends Certificates {
 
     @Override
     public void exportCertificates(String targetPath, String exportFormat) throws CTLArtifactConversionException {
-        //export endpoint certificates
-        if (getEndpointCertificates() != null && !getEndpointCertificates().isEmpty()) {
-            String targetCertsDirectory = targetPath + File.separator + Constants.ENDPOINT_CERTIFICATES_DIRECTORY;
+        exportCertificatesOfType(Constants.ENDPOINT_CERT_TYPE, targetPath, exportFormat);
+        exportCertificatesOfType(Constants.CLIENT_CERTIFICATES_TYPE, targetPath, exportFormat);
+    }
 
-            CommonUtil.cleanDirectory(targetCertsDirectory);
+    private void exportCertificatesOfType(String type, String targetPath,
+                                          String exportFormat) throws CTLArtifactConversionException {
 
-            JsonArray certificates = new JsonArray();
-            for (JsonObject certificate : getEndpointCertificates()) {
-                String crtName = certificate.get("alias").getAsString() + Constants.CRT_EXTENSION;
-                String certificateContent = Constants.BEGIN_CERTIFICATE_STRING.concat(System.lineSeparator())
-                        .concat(endpointCrts.get(crtName)).concat(System.lineSeparator())
-                        .concat(Constants.END_CERTIFICATE_STRING);
-                CommonUtil.writeFile(targetCertsDirectory + File.separator + crtName, certificateContent);
-                certificates.add(certificate);
-            }
-            //write endpoint-certificates.json/endpoint-certificates.yaml file
-            String certificateFileName = targetCertsDirectory + File.separator + Constants.ENDPOINT_CERTIFICATES_CONFIG;
-            ConfigFileUtil.writeV42DTOFile(certificateFileName, exportFormat, Constants.ENDPOINT_CERTIFICATES_TYPE,
-                    certificates);
+        String targetCertsDirectory = null;
+        String certificateFileName = null;
+        String dtoType = null;
+        List<JsonObject> certificates = null;
+        if (Constants.CLIENT_CERT_TYPE.equals(type)) {
+            targetCertsDirectory = targetPath + File.separator + Constants.CLIENT_CERTIFICATES_DIRECTORY;
+            certificateFileName = targetCertsDirectory + File.separator + Constants.CLIENT_CERTIFICATES_CONFIG;
+            dtoType = Constants.CLIENT_CERTIFICATES_TYPE;
+            certificates = getClientCertificates();
+        } else if (Constants.ENDPOINT_CERT_TYPE.equals(type)) {
+            targetCertsDirectory = targetPath + File.separator + Constants.ENDPOINT_CERTIFICATES_DIRECTORY;
+            certificateFileName = targetCertsDirectory + File.separator + Constants.CLIENT_CERTIFICATES_CONFIG;
+            dtoType = Constants.CLIENT_CERTIFICATES_TYPE;
+            certificates = getEndpointCertificates();
         }
 
-        //export client certificates
-        if (getClientCertificates() != null && !getClientCertificates().isEmpty()) {
-            String targetCertsDirectory = targetPath + File.separator + Constants.CLIENT_CERTIFICATES_DIRECTORY;
-
+        if (!StringUtils.isEmpty(certificateFileName) && !StringUtils.isEmpty(dtoType) &&
+                !StringUtils.isEmpty(targetCertsDirectory) && certificates != null && !certificates.isEmpty()) {
             CommonUtil.cleanDirectory(targetCertsDirectory);
 
-            JsonArray certificates = new JsonArray();
-            for (JsonObject certificate : getClientCertificates()) {
+            JsonArray certs = new JsonArray();
+            for (JsonObject certificate : certificates) {
                 String crtName = certificate.get("alias").getAsString() + Constants.CRT_EXTENSION;
                 String certificateContent = Constants.BEGIN_CERTIFICATE_STRING.concat(System.lineSeparator())
                         .concat(clientCrts.get(crtName)).concat(System.lineSeparator())
                         .concat(Constants.END_CERTIFICATE_STRING);
                 CommonUtil.writeFile(targetCertsDirectory + File.separator + crtName, certificateContent);
-                certificates.add(certificate);
+                certs.add(certificate);
             }
-            //write client-certificates.json/client-certificates.yaml file
-            String certificateFileName = targetCertsDirectory + File.separator + Constants.CLIENT_CERTIFICATES_CONFIG;
-            ConfigFileUtil.writeV42DTOFile(certificateFileName, exportFormat, Constants.CLIENT_CERTIFICATES_TYPE,
-                    certificates);
+
+            ConfigFileUtil.writeV42DTOFile(certificateFileName, exportFormat, dtoType,
+                    certs);
         }
-    }
 
-    private void exportCertificatesOfType(List<JsonObject> certificates, String type, String targetPath,
-                                          String exportFormat) throws CTLArtifactConversionException {
-        if (certificates != null && !certificates.isEmpty()) {
-            String targetCertsDirectory = null;
-            String certificateFileName = null;
-            String dtoType = null;
-            if (Constants.CLIENT_CERT_TYPE.equals(type)) {
-                targetCertsDirectory = targetPath + File.separator + Constants.CLIENT_CERTIFICATES_DIRECTORY;
-                certificateFileName = targetCertsDirectory + File.separator + Constants.CLIENT_CERTIFICATES_CONFIG;
-                dtoType = Constants.CLIENT_CERTIFICATES_TYPE;
-            } else if (Constants.ENDPOINT_CERT_TYPE.equals(type)) {
-                targetCertsDirectory = targetPath + File.separator + Constants.ENDPOINT_CERTIFICATES_DIRECTORY;
-                certificateFileName = targetCertsDirectory + File.separator + Constants.CLIENT_CERTIFICATES_CONFIG;
-                dtoType = Constants.CLIENT_CERTIFICATES_TYPE;
-            }
-
-            if (!StringUtils.isEmpty(certificateFileName) && !StringUtils.isEmpty(dtoType) &&
-                    !StringUtils.isEmpty(targetCertsDirectory)) {
-                CommonUtil.cleanDirectory(targetCertsDirectory);
-
-                JsonArray certs = new JsonArray();
-                for (JsonObject certificate : certificates) {
-                    String crtName = certificate.get("alias").getAsString() + Constants.CRT_EXTENSION;
-                    String certificateContent = Constants.BEGIN_CERTIFICATE_STRING.concat(System.lineSeparator())
-                            .concat(clientCrts.get(crtName)).concat(System.lineSeparator())
-                            .concat(Constants.END_CERTIFICATE_STRING);
-                    CommonUtil.writeFile(targetCertsDirectory + File.separator + crtName, certificateContent);
-                    certs.add(certificate);
-                }
-
-                ConfigFileUtil.writeV42DTOFile(certificateFileName, exportFormat, dtoType,
-                        certs);
-            }
-        }
     }
 
     public void setEndpointCrts(Map<String, String> crts) {

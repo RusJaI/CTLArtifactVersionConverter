@@ -6,14 +6,14 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.apimgt.ctl.artifact.converter.Constants;
 import org.wso2.carbon.apimgt.ctl.artifact.converter.exception.CTLArtifactConversionException;
-import org.wso2.carbon.apimgt.ctl.artifact.converter.model.DocumentsDirectory;
+import org.wso2.carbon.apimgt.ctl.artifact.converter.model.Documents;
 import org.wso2.carbon.apimgt.ctl.artifact.converter.util.ConfigFileUtil;
 
 import java.io.*;
 import java.util.List;
 
-public class V32DocumentsDirectory extends DocumentsDirectory {
-    private static final Log log = LogFactory.getLog(V32DocumentsDirectory.class);
+public class V32Documents extends Documents {
+    private static final Log log = LogFactory.getLog(V32Documents.class);
     @Override
     public void importDocuments(String srcPath) throws CTLArtifactConversionException {
         String pathToDocs = srcPath + File.separator + Constants.DOCS_DIRECTORY;

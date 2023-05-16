@@ -124,12 +124,25 @@ public class ConfigFileUtil {
                                              boolean addTypeAndVersion) throws CTLArtifactConversionException {
         JsonObject config = api;
         if (addTypeAndVersion) {
-            config = addTypeAndVersionToFile(Constants.API_TYPE, Constants.APIM_420_VERSION, api);
+            config = addTypeAndVersionToFile(Constants.API_DTO_TYPE, Constants.APIM_420_VERSION, api);
         }
         if (Constants.YAML_FORMAT.equals(format)) {
             writeYamlConfigFile(metaInfoDirectory + File.separator + Constants.API_YAML, config);
         } else if (Constants.JSON_FORMAT.equals(format)) {
             writeJsonConfigFile(metaInfoDirectory + File.separator + Constants.API_JSON, config);
+        }
+    }
+
+    public static void writeV42APIProductConfigFile(String metaInfoDirectory, String format, JsonObject api,
+                                             boolean addTypeAndVersion) throws CTLArtifactConversionException {
+        JsonObject config = api;
+        if (addTypeAndVersion) {
+            config = addTypeAndVersionToFile(Constants.API_PRODUCT_DTO_TYPE, Constants.APIM_420_VERSION, api);
+        }
+        if (Constants.YAML_FORMAT.equals(format)) {
+            writeYamlConfigFile(metaInfoDirectory + File.separator + Constants.API_PRODUCT_YAML, config);
+        } else if (Constants.JSON_FORMAT.equals(format)) {
+            writeJsonConfigFile(metaInfoDirectory + File.separator + Constants.API_PRODUCT_JSON, config);
         }
     }
 
@@ -197,13 +210,8 @@ public class ConfigFileUtil {
             File yamlFile = new File(yamlPath);
             File jsonFile = new File(jsonPath);
 
-            if (yamlFile.exists()) {
-                FileUtils.delete(yamlFile);
-            }
-
-            if (jsonFile.exists()) {
-                FileUtils.delete(jsonFile);
-            }
+            Files.deleteIfExists(yamlFile.toPath());
+            Files.deleteIfExists(jsonFile.toPath());
         } catch (IOException e) {
             String msg = "Error while deleting file: " + filePath;
             throw new CTLArtifactConversionException(msg, e);
@@ -268,15 +276,6 @@ public class ConfigFileUtil {
         // Convert JsonObject to YAML string
         Yaml yaml = new Yaml(options);
         String yamlString = yaml.dump(new Gson().fromJson(json, Map.class));
-
-        /*ObjectMapper yamlReader = new ObjectMapper(new YAMLFactory().enable(
-                JsonParser.Feature.ALLOW_BACKSLASH_ESCAPING_ANY_CHARACTER));
-        JsonNode jsonNodeTree = yamlReader.readTree(json);
-        YAMLMapper yamlMapper = new YAMLMapper().disable(YAMLGenerator.Feature.SPLIT_LINES)
-                .enable(YAMLGenerator.Feature.INDENT_ARRAYS).disable(YAMLGenerator.Feature.LITERAL_BLOCK_STYLE)
-                .disable(YAMLGenerator.Feature.WRITE_DOC_START_MARKER).enable(YAMLGenerator.Feature.MINIMIZE_QUOTES)
-                .enable(YAMLGenerator.Feature.ALWAYS_QUOTE_NUMBERS_AS_STRINGS);
-        return yamlMapper.writeValueAsString(jsonNodeTree);*/
         return yamlString;
     }
 

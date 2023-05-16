@@ -17,10 +17,19 @@ public class V42APIInfo extends APIInfo {
     }
 
     @Override
-    public void exportAPIInfo(String srcPath, String targetPath, String exportFormat) throws CTLArtifactConversionException {
+    public void exportAPIInfo(String srcPath, String targetPath, Boolean isAPIProduct, String exportFormat) throws CTLArtifactConversionException {
         JsonObject apiInfo = getApiInfo();
         if (apiInfo != null && !apiInfo.isEmpty()) {
-            ConfigFileUtil.writeV42APIConfigFile(targetPath, exportFormat, apiInfo, true);
+            if (!isAPIProduct) {
+                ConfigFileUtil.writeV42APIConfigFile(targetPath, exportFormat, apiInfo, true);
+                ConfigFileUtil.deleteConfigFile(targetPath + File.separator + Constants.META_INFO_DIRECTORY,
+                        Constants.API_CONFIG);
+            } else {
+                ConfigFileUtil.writeV42APIProductConfigFile(targetPath, exportFormat, apiInfo, true);
+                ConfigFileUtil.deleteConfigFile(targetPath + File.separator + Constants.META_INFO_DIRECTORY,
+                        Constants.API_PRODUCT_CONFIG);
+            }
+
             if (Constants.GRAPHQL.equals(apiInfo.get("type").getAsString())) {
                 ConfigFileUtil.writeV42GraphQLSchemaFile(srcPath, targetPath);
             } else {

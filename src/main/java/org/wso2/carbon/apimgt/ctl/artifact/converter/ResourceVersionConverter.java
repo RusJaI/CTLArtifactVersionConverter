@@ -8,7 +8,6 @@ public abstract class ResourceVersionConverter {
     protected String srcPath;
     protected String targetPath;
     protected String exportFormat;
-    protected String artifactName;
 
     public ResourceVersionConverter(String srcVersion, String targetVersion, String srcPath, String targetPath,
                                     String exportFormat) {

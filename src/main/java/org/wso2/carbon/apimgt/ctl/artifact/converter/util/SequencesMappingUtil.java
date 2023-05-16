@@ -50,10 +50,10 @@ public class SequencesMappingUtil {
         Map<String, List<JsonObject>> sequencesMap = v32Sequences.getSequencesMap();
         if (sequencesMap != null && sequencesMap.get(direction) != null) {
             for (JsonObject sequence : sequencesMap.get(direction)) {
-                JsonObject v42Policy = v42APIPolicies.getAPIPolicy(sequence.get("name").getAsString());
+                JsonObject v42Policy = v42APIPolicies.getAPIPolicy(CommonUtil.readElementAsString(sequence, "name"));
                 if (v42Policy != null) {
                     //sequence already exists for a different flow, add the flow to the existing sequence's applicable flows
-                    v42Policy.get("applicableFlows").getAsJsonArray().add(resolveDirectionToFlow(direction));
+                    CommonUtil.readElementAsJsonArray(v42Policy, "applicableFlows").add(resolveDirectionToFlow(direction));
                 } else {
                     v42Policy = mapV32SequenceToV42APIPolicy(sequence, resolveDirectionToFlow(direction));
                     v42APIPolicies.addAPIPolicy(v42Policy);
@@ -65,11 +65,12 @@ public class SequencesMappingUtil {
     private static JsonObject mapV32SequenceToV42APIPolicy(JsonObject srcSequence, String flow) throws
             CTLArtifactConversionException {
         JsonObject v42PolicyObj = new JsonObject();
-        v42PolicyObj.addProperty("name", srcSequence.get("name").getAsString());
+        String sequenceName = CommonUtil.readElementAsString(srcSequence, "name");
+        v42PolicyObj.addProperty("name", sequenceName);
         v42PolicyObj.addProperty("category", Constants.POLICY_CATEGORY_MEDIATION);
         v42PolicyObj.addProperty("version", "v1");
-        v42PolicyObj.addProperty("displayName", srcSequence.get("name").getAsString());
-        v42PolicyObj.addProperty("description", srcSequence.get("name").getAsString());
+        v42PolicyObj.addProperty("displayName", sequenceName);
+        v42PolicyObj.addProperty("description", sequenceName);
 
         JsonArray flows = new JsonArray();
         flows.add(flow);
@@ -87,7 +88,7 @@ public class SequencesMappingUtil {
         v42PolicyObj.add("policyAttributes",new JsonArray());
 
         //store sequence content as a property
-        populatePolicySpec(srcSequence.get("content").getAsString(), v42PolicyObj);
+        populatePolicySpec(CommonUtil.readElementAsString(srcSequence, "content"), v42PolicyObj);
         return v42PolicyObj;
     }
 

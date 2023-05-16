@@ -32,7 +32,7 @@ public class V32APIInfo extends APIInfo {
     }
 
     @Override
-    public void exportAPIInfo(String srcPath, String targetPath, String exportFormat) throws CTLArtifactConversionException {
+    public void exportAPIInfo(String srcPath, String targetPath, Boolean isAPIProduct, String exportFormat) throws CTLArtifactConversionException {
         //not implemented yet
     }
 }

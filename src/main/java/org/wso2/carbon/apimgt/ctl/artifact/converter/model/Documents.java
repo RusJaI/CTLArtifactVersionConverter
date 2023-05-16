@@ -6,7 +6,7 @@ import org.wso2.carbon.apimgt.ctl.artifact.converter.exception.CTLArtifactConver
 import java.util.ArrayList;
 import java.util.List;
 
-public abstract class DocumentsDirectory {
+public abstract class Documents {
     private List<JsonObject> documents = new ArrayList<>();
 
     public abstract void importDocuments(String srcPath) throws CTLArtifactConversionException;

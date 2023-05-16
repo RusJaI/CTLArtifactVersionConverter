@@ -272,6 +272,15 @@ public class CommonUtil {
         return value;
     }
 
+    public static int readElementAsInteger(JsonObject object, String key) {
+        int value = 0;
+        JsonElement element = object.get(key);
+        if (element != null) {
+            value = element.getAsInt();
+        }
+        return value;
+    }
+
     public static JsonArray readElementAsJsonArray(JsonObject object, String key) {
         JsonArray value = null;
         JsonElement element = object.get(key);

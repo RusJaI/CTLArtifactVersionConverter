@@ -10,35 +10,46 @@ import io.swagger.v3.parser.core.models.ParseOptions;
 import org.apache.commons.lang3.StringUtils;
 
 import org.wso2.carbon.apimgt.ctl.artifact.converter.Constants;
-import org.wso2.carbon.apimgt.ctl.artifact.converter.dto.V32APIDTO;
-import org.wso2.carbon.apimgt.ctl.artifact.converter.dto.V42APIDTO;
 import org.wso2.carbon.apimgt.ctl.artifact.converter.exception.CTLArtifactConversionException;
 import org.wso2.carbon.apimgt.ctl.artifact.converter.model.APIInfo;
 import org.wso2.carbon.apimgt.ctl.artifact.converter.model.v42.V42APIInfo;
-import org.wso2.carbon.apimgt.rest.api.publisher.v1.dto.APIDTO;
+import org.wso2.carbon.apimgt.rest.api.publisher.v1.dto.*;
 
 import java.io.File;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class APIInfoMappingUtil {
-    public static void mapAPIInfo(APIInfo srcAPIInfo, APIInfo targetAPIInfo, String srcVersion, String targetVersion, String srcPath) throws CTLArtifactConversionException {
+    public static void mapAPIInfo(APIInfo srcAPIInfo, APIInfo targetAPIInfo, String srcVersion,
+                                  String targetVersion, String srcPath) throws CTLArtifactConversionException {
         if (srcVersion.equals(Constants.V320) && targetVersion.equals(Constants.V420)) {
-            v32tov42APIInfo(srcAPIInfo, targetAPIInfo, srcPath);
+            v32tov42APIInfo(srcAPIInfo, targetAPIInfo, Constants.API_TYPE, srcPath);
         }
         //todo: implement other versions, if no matching conversion found(unlikely to happen), return the same list
     }
 
-    public static void v32tov42APIInfo(APIInfo srcAPIInfo, APIInfo targetAPIInfo, String srcPath) throws CTLArtifactConversionException {
+    public static void mapAPIProductInfo(APIInfo srcAPIInfo, APIInfo targetAPIInfo, String srcVersion,
+                                         String targetVersion, String srcPath) throws CTLArtifactConversionException {
+        if (srcVersion.equals(Constants.V320) && targetVersion.equals(Constants.V420)) {
+            v32tov42APIInfo(srcAPIInfo, targetAPIInfo, Constants.API_PRIDUCT_TYPE, srcPath);
+        }
+    }
+
+    public static void v32tov42APIInfo(APIInfo srcAPIInfo, APIInfo targetAPIInfo, String type, String srcPath) throws CTLArtifactConversionException {
         JsonObject srcAPIInfoJson = srcAPIInfo.getApiInfo();
+        String status;
         if (srcAPIInfoJson != null && !srcAPIInfoJson.isEmpty()) {
             JsonObject targetAPIInfoJson = new JsonObject();
-            addV32ToV42DirectMappings(srcAPIInfoJson, targetAPIInfoJson, srcPath);
+            if (Constants.API_PRIDUCT_TYPE.equals(type)) {
+                addV32ToV42ProductMappings(srcAPIInfoJson, targetAPIInfoJson, srcPath);
+                status = CommonUtil.readElementAsString(srcAPIInfoJson, "state");
+            } else {
+                addV32ToV42APIMappings(srcAPIInfoJson, targetAPIInfoJson, srcPath);
+                status = CommonUtil.readElementAsString(srcAPIInfoJson, "status");
+            }
             targetAPIInfo.setApiInfo(targetAPIInfoJson);
 
             //add deployment-environments config if 3.2.0 API is in published state
-            if (Constants.PUBLISHED.equals(CommonUtil.readElementAsString(srcAPIInfoJson, "status"))) {
+            if (Constants.PUBLISHED.equals(status)) {
                 JsonArray deploymentEnvironments = new JsonArray();
                 CommonUtil.readElementAsJsonArray(srcAPIInfoJson, "environments").iterator().forEachRemaining(
                         environment -> {
@@ -54,144 +65,82 @@ public class APIInfoMappingUtil {
         }
     }
 
-    private static void addV32ToV42DirectMappings(JsonObject src, JsonObject target, String srcPath) throws CTLArtifactConversionException {
-        JsonObject idObject = src.get("id").getAsJsonObject();
-
+    /**
+     * This method will map the common API and Product properties from 3.2.0 to 4.2.0
+     *
+     * @param src   3.2.0 API/Product info
+     * @param target    4.2.0 API/Product info
+     * @param srcPath   path of the 3.2.0 API/Product
+     */
+    public static void addV32ToV42CommonMappings(JsonObject src, JsonObject target, String srcPath) throws
+            CTLArtifactConversionException {
         populateAPIPropertyAsString(src, target, "uuid", "id");
+        populateAPIPropertyAsString(src, target, "description", "description");
+        populateAPIPropertyAsString(src, target, "context", "context");
+        populateAPIPropertyAsString(src, target, "authorizationHeader", "authorizationHeader");
+        populateAPIPropertyAsInteger(src, target, "cacheTimeout", "cacheTimeout");
+        target.addProperty("enableSchemaValidation", CommonUtil.readElementAsBoolean(src, "enableSchemaValidation"));
+        target.addProperty("gatewayVendor", Constants.GATEWAY_VENDOR_WSO2);
+
+        populateVisibilityInfo(src, target);
+        populateAccessControlInfo(src, target);
+        populateBusinessInfo(src, target);
+        populateSubscriptionAvailabilityInfo(src, target);
+        populateCorsConfig(src, target);
+        populateAdditionalProperties(src, target);
+        populateCategoriesAndTags(src, target);
+        populateAPISecurity(src, target);
+        populateThrottlePolicies(src, target);
+        populateTransports(src, target);
+        populateUriTemplates(srcPath, target);
+    }
+    public static void addV32ToV42ProductMappings(JsonObject src, JsonObject target, String srcPath) throws
+            CTLArtifactConversionException {
+        addV32ToV42CommonMappings(src, target, srcPath);
+
+        //API Product Specific properties
+        JsonObject idObject = src.get("id").getAsJsonObject();
+        populateAPIPropertyAsString(idObject, target, "providerName", "provider");
+        populateAPIPropertyAsString(idObject, target, "apiProductName", "name");
+        populateAPIPropertyAsString(src, target, "state", "state");
+        populateDependentAPIs(src, target);
+
+        JsonElement typeElement = src.get("type");
+        if (typeElement != null) {
+            APIProductDTO.ApiTypeEnum apiTypeEnum = APIProductDTO.ApiTypeEnum.valueOf(typeElement.getAsString().toUpperCase());
+            target.addProperty("type", apiTypeEnum.toString());
+        } else {
+            target.addProperty("type", APIProductDTO.ApiTypeEnum.APIPRODUCT.value());
+        }
+
+        target.addProperty("hasThumbnail", !StringUtils.isEmpty(CommonUtil.readElementAsString(src, "thumbnailUrl")));
+
+    }
+
+    private static void addV32ToV42APIMappings(JsonObject src, JsonObject target, String srcPath) throws CTLArtifactConversionException {
+        addV32ToV42CommonMappings(src, target, srcPath);
+
+        // API Specific properties
+        JsonObject idObject = src.get("id").getAsJsonObject();
         populateAPIPropertyAsString(idObject, target, "providerName", "provider");
         populateAPIPropertyAsString(idObject, target, "apiName", "name");
         populateAPIPropertyAsString(idObject, target, "version", "version");
-        populateAPIPropertyAsString(src, target, "description", "description");
-        populateAPIPropertyAsString(src, target, "context", "context");
         populateAPIPropertyAsString(src, target, "status", "lifeCycleStatus");
-        populateAPIPropertyAsString(src, target, "authorizationHeader", "authorizationHeader");
+
+        JsonElement typeElement = src.get("type");
+        if (typeElement != null) {
+            APIDTO.TypeEnum apiTypeEnum = APIDTO.TypeEnum.valueOf(typeElement.getAsString());
+            target.addProperty("type", apiTypeEnum.toString());
+        } else {
+            target.addProperty("type", APIDTO.TypeEnum.HTTP.value());
+        }
 
         target.addProperty("responseCachingEnabled", Constants.V32_RESPONSE_CACHING_ENABLED.equals(
                 CommonUtil.readElementAsString(src, "responseCache")));
-        target.addProperty("cacheTimeout", src.get("cacheTimeout").getAsInt());
-        target.addProperty("isDefaultVersion", src.get("isDefaultVersion").getAsBoolean());
-        target.addProperty("enableSchemaValidation", src.get("enableSchemaValidation").getAsBoolean());
-
-        populateAPIPropertyAsString(src, target, "type", "type");
-        String transports = CommonUtil.readElementAsString(src, "transports");
-        if (!StringUtils.isEmpty(transports)) {
-            JsonArray transportsArray = new JsonArray();
-            Arrays.stream(transports.split(",")).map(String::trim).forEach(transportsArray::add);
-            target.add("transport", transportsArray);
-        }
-
-        String implementation = CommonUtil.readElementAsString(src, "implementation");
-        APIDTO.EndpointImplementationTypeEnum endpointImplementationType = APIDTO.EndpointImplementationTypeEnum.ENDPOINT;
-        if (!StringUtils.isEmpty(implementation)) {
-            endpointImplementationType = APIDTO.EndpointImplementationTypeEnum
-                    .fromValue(src.get("implementation").getAsString());
-        }
-        target.addProperty("endpointImplementationType", endpointImplementationType.toString());
-
-        JsonArray categories = CommonUtil.readElementAsJsonArray(src, "apiCategories");
-        if (categories != null && !categories.isEmpty()) {
-            JsonArray categoryNamesArray = new JsonArray();
-            categories.asList().forEach(category -> {
-                JsonObject categoryObject = category.getAsJsonObject();
-                String categoryName = CommonUtil.readElementAsString(categoryObject, "name");
-                if (!StringUtils.isEmpty(categoryName)) {
-                    categoryNamesArray.add(categoryName);
-                }
-            });
-            target.add("categories", categoryNamesArray);
-        }
-
-        target.addProperty("gatewayVendor", Constants.GATEWAY_VENDOR_WSO2);
+        target.addProperty("isDefaultVersion", CommonUtil.readElementAsBoolean(src, "isDefaultVersion"));
         target.addProperty("gatewayType", Constants.GATEWAY_TYPE_SYNAPSE);
         target.addProperty("enableSubscriberVerification", false);
-
-        JsonArray tags = CommonUtil.readElementAsJsonArray(src, "tags");
-        if (tags != null && !tags.isEmpty()) {
-            target.add("tags", tags);
-        }
-
-        String endpointConfig = CommonUtil.readElementAsString(src, "endpointConfig");
-        JsonObject endpointConfigObj = new Gson().fromJson(endpointConfig, JsonObject.class);
-        target.add("endpointConfig", endpointConfigObj);
-
-        JsonArray availableTiers = src.get("availableTiers").getAsJsonArray();
-        JsonArray policies = new JsonArray();
-        for (JsonElement element : availableTiers.asList()) {
-            JsonObject tier = element.getAsJsonObject();
-            String tierName = CommonUtil.readElementAsString(tier, "name");
-            policies.add(tierName);
-        }
-        target.add("policies", policies);
-
-        String apiSecurity = CommonUtil.readElementAsString(src, "apiSecurity");
-        if (!StringUtils.isEmpty(apiSecurity)) {
-            JsonArray apiSecurityArray = new JsonArray();
-            Arrays.stream(apiSecurity.split(",")).map(String::trim).forEach(apiSecurityArray::add);
-            target.add("securityScheme", apiSecurityArray);
-        }
-
-        populateBusinessInfo(src, target);
-        populateVisibilityInfo(src, target);
-        populateSubscriptionAvailabilityInfo(src, target);
-        populateAccessControlInfo(src, target);
-        populateCorsConfig(src, target);
-        populateAdditionalProperties(src, target);
-        populateUriTemplates(srcPath, target);
-    }
-
-    public static V42APIDTO v32DtoToV42Dto(V32APIDTO v32APIDTO) {
-        V42APIDTO v42APIDTO = new V42APIDTO();
-        v42APIDTO.setId(v32APIDTO.getId());
-        v42APIDTO.setName(v32APIDTO.getName());
-        v42APIDTO.setDescription(v32APIDTO.getDescription());
-        v42APIDTO.setContext(v32APIDTO.getContext());
-        v42APIDTO.setVersion(v32APIDTO.getVersion());
-        v42APIDTO.setProvider(v32APIDTO.getProvider());
-        v42APIDTO.setLifeCycleStatus(v32APIDTO.getLifeCycleStatus());
-        v42APIDTO.setWsdlInfo(v32APIDTO.getWsdlInfo());
-        v42APIDTO.setWsdlUrl(v32APIDTO.getWsdlUrl());
-        v42APIDTO.setResponseCachingEnabled(v32APIDTO.isResponseCachingEnabled());
-        v42APIDTO.setCacheTimeout(v32APIDTO.getCacheTimeout());
-        v42APIDTO.setHasThumbnail(v32APIDTO.isHasThumbnail());
-        v42APIDTO.setIsDefaultVersion(v32APIDTO.isIsDefaultVersion());
-        v42APIDTO.setEnableSchemaValidation(v32APIDTO.isEnableSchemaValidation());
-        v42APIDTO.setType(V42APIDTO.TypeEnum.valueOf(v32APIDTO.getType().toString()));
-        v42APIDTO.setTransport(v32APIDTO.getTransport());
-        v42APIDTO.setTags(v32APIDTO.getTags());
-        v42APIDTO.setPolicies(v32APIDTO.getPolicies());
-        v42APIDTO.setApiThrottlingPolicy(v32APIDTO.getApiThrottlingPolicy());
-        v42APIDTO.setAuthorizationHeader(v32APIDTO.getAuthorizationHeader());
-        v42APIDTO.setSecurityScheme(v32APIDTO.getSecurityScheme());
-        v42APIDTO.setMaxTps(v32APIDTO.getMaxTps());
-        v42APIDTO.setVisibility(V42APIDTO.VisibilityEnum.valueOf(v32APIDTO.getVisibility().toString()));
-        v42APIDTO.setVisibleTenants(v32APIDTO.getVisibleTenants());
-        v42APIDTO.setVisibleRoles(v32APIDTO.getVisibleRoles());
-        v42APIDTO.setMediationPolicies(v32APIDTO.getMediationPolicies());
-        v42APIDTO.setSubscriptionAvailability(V42APIDTO.SubscriptionAvailabilityEnum.valueOf(v32APIDTO.
-                getSubscriptionAvailability().toString()));
-        v42APIDTO.setSubscriptionAvailableTenants(v32APIDTO.getSubscriptionAvailableTenants());
-        v42APIDTO.setMonetization(v32APIDTO.getMonetization());
-        //additional properties
-        v42APIDTO.setAccessControl(V42APIDTO.AccessControlEnum.valueOf(v32APIDTO.getAccessControl().toString()));
-        v42APIDTO.setAccessControlRoles(v32APIDTO.getAccessControlRoles());
-        v42APIDTO.setBusinessInformation(v32APIDTO.getBusinessInformation());
-        v42APIDTO.setCorsConfiguration(v32APIDTO.getCorsConfiguration());
-        v42APIDTO.setWorkflowStatus(v32APIDTO.getWorkflowStatus());
-        v42APIDTO.setCreatedTime(v32APIDTO.getCreatedTime());
-        v42APIDTO.setLastUpdatedTime(v32APIDTO.getLastUpdatedTime());
-        //endpoint config
-        v42APIDTO.setEndpointImplementationType(V42APIDTO.EndpointImplementationTypeEnum.valueOf(v32APIDTO.
-                getEndpointImplementationType().toString()));
-        v42APIDTO.setScopes(v32APIDTO.getScopes());
-        v42APIDTO.setThreatProtectionPolicies(v32APIDTO.getThreatProtectionPolicies());
-        v42APIDTO.setCategories(v32APIDTO.getCategories());
-        v42APIDTO.setKeyManagers(v32APIDTO.getKeyManagers());
-
-        v42APIDTO.setGatewayType(Constants.GATEWAY_TYPE_WSO2_SYNAPSE);
-        v42APIDTO.setGatewayVendor(Constants.GATEWAY_VENDOR_WSO2);
-        //advertise info : todo check with heshan
-
-        return new V42APIDTO();
+        populateEndpointInfo(src, target);
     }
 
     private static void populateUriTemplates(String srcPath, JsonObject target) throws CTLArtifactConversionException {
@@ -240,10 +189,75 @@ public class APIInfoMappingUtil {
         target.add("operations", uriTemplates);
     }
 
+    private static void populateDependentAPIs(JsonObject src, JsonObject target) {
+        JsonArray productResources = src.get("productResources").getAsJsonArray();
+        Map<String, ProductAPIDTO> productAPIDTOsMap = new HashMap<>();
+        for (JsonElement pr : productResources) {
+            JsonObject productResource = pr.getAsJsonObject();
+            JsonObject apiIdentifier = productResource.getAsJsonObject("apiIdentifier");
+            if (apiIdentifier != null) {
+                String apiName = CommonUtil.readElementAsString(apiIdentifier, "apiName");
+                String apiVersion = CommonUtil.readElementAsString(apiIdentifier, "version");
+                String key = apiName + "-" + apiVersion;
+
+                List<APIOperationsDTO> operationsDTOS;
+                ProductAPIDTO productAPIDTO;
+                if (!productAPIDTOsMap.containsKey(key)) {
+                    productAPIDTO = new ProductAPIDTO();
+                    productAPIDTO.setName(apiName);
+                    productAPIDTO.setVersion(apiVersion);
+                } else {
+                    productAPIDTO = productAPIDTOsMap.get(key);
+                }
+
+                if (productAPIDTO != null) {
+                    operationsDTOS = productAPIDTO.getOperations();
+                    if (operationsDTOS == null || operationsDTOS.isEmpty()) {
+                        operationsDTOS = new ArrayList<>();
+                    }
+
+                    APIOperationsDTO apiOperationsDTO = new APIOperationsDTO();
+                    JsonObject srcURITemplate = productResource.getAsJsonObject("uriTemplate");
+                    apiOperationsDTO.setVerb(CommonUtil.readElementAsString(srcURITemplate, "httpVerb"));
+                    apiOperationsDTO.setTarget(CommonUtil.readElementAsString(srcURITemplate, "uriTemplate"));
+                    apiOperationsDTO.setAuthType(CommonUtil.readElementAsString(srcURITemplate, "authType"));
+                    apiOperationsDTO.setThrottlingPolicy(CommonUtil.readElementAsString(srcURITemplate, "throttlingTier"));
+                    apiOperationsDTO.setOperationPolicies(new APIOperationPoliciesDTO());
+                    apiOperationsDTO.setAmznResourceName(CommonUtil.readElementAsString(srcURITemplate, "amznResourceName"));
+                    apiOperationsDTO.setAmznResourceTimeout(CommonUtil.readElementAsInteger(srcURITemplate, "amznResourceTimeout"));
+                    JsonArray scopesJson = CommonUtil.readElementAsJsonArray(srcURITemplate, "scopes");
+                    List<String> scopes = new ArrayList<>();
+                    if (scopesJson != null) {
+                        scopesJson.forEach(scope -> { scopes.add(scope.getAsString()); });
+                        apiOperationsDTO.setScopes(scopes);
+                    }
+                    operationsDTOS.add(apiOperationsDTO);
+
+                    //todo: operation policies
+                    productAPIDTO.setOperations(operationsDTOS);
+                    productAPIDTOsMap.put(key, productAPIDTO);
+                }
+            } else {
+                //log and skip the product resource : highly unlikely to reach here
+            }
+        }
+
+        List<ProductAPIDTO> productAPIDTOS = new ArrayList<>(productAPIDTOsMap.values());
+        JsonArray dependentAPIs = new Gson().toJsonTree(productAPIDTOS).getAsJsonArray();
+        target.add("apis", dependentAPIs);
+    }
+
     private static void populateAPIPropertyAsString(JsonObject src, JsonObject target, String srcKey, String targetKey) {
         String value = CommonUtil.readElementAsString(src, srcKey);
         if (!StringUtils.isEmpty(value)) {
             target.addProperty(targetKey, value);
+        }
+    }
+
+    private static void populateAPIPropertyAsInteger(JsonObject src, JsonObject target, String srcKey, String targetKey) {
+        JsonElement element = src.get(srcKey);
+        if (element != null) {
+            target.addProperty(targetKey, element.getAsInt());
         }
     }
 
@@ -266,6 +280,71 @@ public class APIInfoMappingUtil {
             }
             target.add("additionalProperties", propertiesArray);
             target.add("additionalPropertiesMap", propertiesMap);
+        }
+    }
+
+    private static void populateCategoriesAndTags(JsonObject src, JsonObject target) {
+        JsonArray categories = CommonUtil.readElementAsJsonArray(src, "apiCategories");
+        if (categories != null && !categories.isEmpty()) {
+            JsonArray categoryNamesArray = new JsonArray();
+            categories.asList().forEach(category -> {
+                JsonObject categoryObject = category.getAsJsonObject();
+                String categoryName = CommonUtil.readElementAsString(categoryObject, "name");
+                if (!StringUtils.isEmpty(categoryName)) {
+                    categoryNamesArray.add(categoryName);
+                }
+            });
+            target.add("categories", categoryNamesArray);
+        }
+
+        JsonArray tags = CommonUtil.readElementAsJsonArray(src, "tags");
+        if (tags != null && !tags.isEmpty()) {
+            target.add("tags", tags);
+        }
+    }
+
+    private static void populateAPISecurity(JsonObject src, JsonObject target) {
+        String apiSecurity = CommonUtil.readElementAsString(src, "apiSecurity");
+        if (!StringUtils.isEmpty(apiSecurity)) {
+            JsonArray apiSecurityArray = new JsonArray();
+            Arrays.stream(apiSecurity.split(",")).map(String::trim).forEach(apiSecurityArray::add);
+            target.add("securityScheme", apiSecurityArray);
+        }
+    }
+
+    private static void populateThrottlePolicies(JsonObject src, JsonObject target) {
+        JsonArray availableTiers = src.get("availableTiers").getAsJsonArray();
+        JsonArray policies = new JsonArray();
+        for (JsonElement element : availableTiers.asList()) {
+            JsonObject tier = element.getAsJsonObject();
+            String tierName = CommonUtil.readElementAsString(tier, "name");
+            policies.add(tierName);
+        }
+        target.add("policies", policies);
+    }
+
+    private static void populateTransports(JsonObject src, JsonObject target) {
+        String transports = CommonUtil.readElementAsString(src, "transports");
+        if (!StringUtils.isEmpty(transports)) {
+            JsonArray transportsArray = new JsonArray();
+            Arrays.stream(transports.split(",")).map(String::trim).forEach(transportsArray::add);
+            target.add("transport", transportsArray);
+        }
+    }
+
+    private static void populateEndpointInfo(JsonObject src, JsonObject target) {
+        String implementation = CommonUtil.readElementAsString(src, "implementation");
+        APIDTO.EndpointImplementationTypeEnum endpointImplementationType = APIDTO.EndpointImplementationTypeEnum.ENDPOINT;
+        if (!StringUtils.isEmpty(implementation)) {
+            endpointImplementationType = APIDTO.EndpointImplementationTypeEnum
+                    .fromValue(src.get("implementation").getAsString());
+        }
+        target.addProperty("endpointImplementationType", endpointImplementationType.toString());
+
+        if (src.get("endpointConfig") != null) {
+            String endpointConfigString = src.get("endpointConfig").getAsString();
+            JsonObject endpointConfigObject = new Gson().fromJson(endpointConfigString, JsonObject.class);
+            target.add("endpointConfig", endpointConfigObject);
         }
     }
 

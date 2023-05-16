@@ -3,23 +3,23 @@ package org.wso2.carbon.apimgt.ctl.artifact.converter.factory;
 import org.wso2.carbon.apimgt.ctl.artifact.converter.Constants;
 import org.wso2.carbon.apimgt.ctl.artifact.converter.model.APIInfo;
 import org.wso2.carbon.apimgt.ctl.artifact.converter.model.Certificates;
-import org.wso2.carbon.apimgt.ctl.artifact.converter.model.DocumentsDirectory;
+import org.wso2.carbon.apimgt.ctl.artifact.converter.model.Documents;
 import org.wso2.carbon.apimgt.ctl.artifact.converter.model.Sequences;
 import org.wso2.carbon.apimgt.ctl.artifact.converter.model.v32.V32APIInfo;
-import org.wso2.carbon.apimgt.ctl.artifact.converter.model.v32.V32DocumentsDirectory;
+import org.wso2.carbon.apimgt.ctl.artifact.converter.model.v32.V32Documents;
 import org.wso2.carbon.apimgt.ctl.artifact.converter.model.v32.V32Certificates;
 import org.wso2.carbon.apimgt.ctl.artifact.converter.model.v32.V32Sequences;
 import org.wso2.carbon.apimgt.ctl.artifact.converter.model.v42.V42APIInfo;
 import org.wso2.carbon.apimgt.ctl.artifact.converter.model.v42.V42APIPolicies;
-import org.wso2.carbon.apimgt.ctl.artifact.converter.model.v42.V42DocumentsDirectory;
+import org.wso2.carbon.apimgt.ctl.artifact.converter.model.v42.V42Documents;
 import org.wso2.carbon.apimgt.ctl.artifact.converter.model.v42.V42Certificates;
 
 public class ResourceFactory {
-    public static DocumentsDirectory getDocumentsRepresentation(String version) {
+    public static Documents getDocumentsRepresentation(String version) {
         if (version.equals(Constants.V320)) {
-            return new V32DocumentsDirectory();
+            return new V32Documents();
         } else if (version.equals(Constants.V420)) {
-            return new V42DocumentsDirectory();
+            return new V42Documents();
         } else {
             return null;
         }

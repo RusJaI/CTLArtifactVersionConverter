@@ -27,9 +27,9 @@ public class CertificatesMappingUtil {
         List<JsonObject> v42Certificates = new ArrayList<>();
         for (JsonObject v32certificate : v32certificates) {
             JsonObject v42Certificate = new JsonObject();
-            String alias = v32certificate.get("alias").getAsString();
+            String alias = CommonUtil.readElementAsString(v32certificate, "alias");
             v42Certificate.addProperty("alias", alias);
-            v42Certificate.addProperty("endpoint", v32certificate.get("hostName").getAsString());
+            v42Certificate.addProperty("endpoint", CommonUtil.readElementAsString(v32certificate, "hostName"));
             v42Certificate.addProperty("certificate", alias + Constants.CRT_EXTENSION);
             v42Certificates.add(v42Certificate);
         }
@@ -40,10 +40,10 @@ public class CertificatesMappingUtil {
         List<JsonObject> v42Certificates = new ArrayList<>();
         for (JsonObject v32certificate : v32certificates) {
             JsonObject v42Certificate = new JsonObject();
-            String alias = v32certificate.get("alias").getAsString();
+            String alias = CommonUtil.readElementAsString(v32certificate, "alias");
             v42Certificate.addProperty("alias", alias);
             v42Certificate.addProperty("certificate", alias + Constants.CRT_EXTENSION);
-            v42Certificate.addProperty("tierName", v32certificate.get("tierName").getAsString());
+            v42Certificate.addProperty("tierName", CommonUtil.readElementAsString(v32certificate, "tierName"));
             v42Certificate.add("apiIdentifier", v32certificate.get("apiIdentifier"));
             v42Certificates.add(v42Certificate);
         }
@@ -53,8 +53,8 @@ public class CertificatesMappingUtil {
     public static Map<String, String> getCrtsFromV32CertList(List<JsonObject> v32certificates) {
         Map<String, String> crts = new HashMap<>();
         for (JsonObject v32certificate : v32certificates) {
-            String alias = v32certificate.get("alias").getAsString();
-            String crt = v32certificate.get("certificate").getAsString();
+            String alias = CommonUtil.readElementAsString(v32certificate, "alias");;
+            String crt = CommonUtil.readElementAsString(v32certificate, "certificate");
             crts.put(alias + Constants.CRT_EXTENSION, crt);
         }
         return crts;

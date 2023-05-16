@@ -22,7 +22,7 @@ public class CtlArtifactApiServiceImpl implements CtlArtifactApiService {
     private static final Log log = LogFactory.getLog(CtlArtifactApiServiceImpl.class);
 
     public Response convertCTLArtifact(InputStream fileInputStream, Attachment fileDetail, String srcVersion,
-                                       String targetVersion, String exportFormat, MessageContext messageContext) {
+                                       String targetVersion, String exportFormat, String type, MessageContext messageContext) {
         try {
             log.info("Migrating API artifact from version " + srcVersion + " to " + targetVersion);
             //Transfer input stream to APIArchive.zip inside tmp folder
@@ -42,10 +42,15 @@ public class CtlArtifactApiServiceImpl implements CtlArtifactApiService {
             File copyAPIArtifactFile = new File(targetArtifactPath);
             FileUtils.copyDirectory(srcAPIArtifactFile, copyAPIArtifactFile);
 
-            String format = Constants.YAML_FORMAT;
-            ArtifactConversionManager conversionManager = new ArtifactConversionManager(srcVersion, targetVersion,
-                    srcArtifactPath, targetArtifactPath, format);
-            conversionManager.convert();
+            if (Constants.API_PRIDUCT_TYPE.equals(type)) {
+                APIProductArtifactConversionManager productConversionManager = new APIProductArtifactConversionManager(srcVersion, targetVersion,
+                        srcArtifactPath, targetArtifactPath, exportFormat);
+                productConversionManager.convert();
+            } else {
+                APIArtifactConversionManager apiConversionManager = new APIArtifactConversionManager(srcVersion, targetVersion,
+                        srcArtifactPath, targetArtifactPath, exportFormat);
+                apiConversionManager.convert();
+            }
 
             CommonUtil.archiveDirectory(tempTargetDirectory.getAbsolutePath());
             FileUtils.deleteQuietly(new File(tempTargetDirectory.getAbsolutePath()));
