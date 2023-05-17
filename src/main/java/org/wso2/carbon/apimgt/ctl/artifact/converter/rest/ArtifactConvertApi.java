@@ -1,15 +1,15 @@
-package org.wso2.carbon.apimgt.ctl.artifact.converter;
+package org.wso2.carbon.apimgt.ctl.artifact.converter.rest;
 
+import org.wso2.carbon.apimgt.ctl.artifact.converter.rest.impl.ArtifactConvertApiService;
 import org.wso2.carbon.apimgt.ctl.artifact.converter.dto.ErrorDTO;
 import java.io.File;
-import org.wso2.carbon.apimgt.ctl.artifact.converter.ArtifactConvertApiService;
-import org.wso2.carbon.apimgt.ctl.artifact.converter.impl.ArtifactConvertApiServiceImpl;
+
+import org.wso2.carbon.apimgt.ctl.artifact.converter.rest.impl.ArtifactConvertApiServiceImpl;
 import org.wso2.carbon.apimgt.ctl.artifact.converter.exception.CTLArtifactConversionException;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.SecurityContext;
 
 import io.swagger.annotations.*;
 import java.io.InputStream;
@@ -18,9 +18,6 @@ import org.apache.cxf.jaxrs.ext.MessageContext;
 import org.apache.cxf.jaxrs.ext.multipart.Attachment;
 import org.apache.cxf.jaxrs.ext.multipart.Multipart;
 
-import java.util.Map;
-import java.util.List;
-import javax.validation.constraints.*;
 @Path("/artifact-convert")
 
 @Api(description = "the artifact-convert API")

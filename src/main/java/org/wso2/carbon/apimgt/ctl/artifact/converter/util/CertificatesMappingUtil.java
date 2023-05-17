@@ -1,7 +1,6 @@
 package org.wso2.carbon.apimgt.ctl.artifact.converter.util;
 
 import com.google.gson.JsonObject;
-import org.wso2.carbon.apimgt.ctl.artifact.converter.Constants;
 import org.wso2.carbon.apimgt.ctl.artifact.converter.model.Certificates;
 import org.wso2.carbon.apimgt.ctl.artifact.converter.model.v42.V42Certificates;
 

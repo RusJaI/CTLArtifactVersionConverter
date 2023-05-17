@@ -1,4 +1,4 @@
-package org.wso2.carbon.apimgt.ctl.artifact.converter;
+package org.wso2.carbon.apimgt.ctl.artifact.converter.util;
 
 public class Constants {
     public static final String V320 = "3.2.0";

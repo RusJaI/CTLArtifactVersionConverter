@@ -3,7 +3,7 @@ package org.wso2.carbon.apimgt.ctl.artifact.converter.model.v42;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import org.apache.commons.lang3.StringUtils;
-import org.wso2.carbon.apimgt.ctl.artifact.converter.Constants;
+import org.wso2.carbon.apimgt.ctl.artifact.converter.util.Constants;
 import org.wso2.carbon.apimgt.ctl.artifact.converter.exception.CTLArtifactConversionException;
 import org.wso2.carbon.apimgt.ctl.artifact.converter.model.Certificates;
 import org.wso2.carbon.apimgt.ctl.artifact.converter.util.CommonUtil;
@@ -50,7 +50,7 @@ public class V42Certificates extends Certificates {
 
         if (!StringUtils.isEmpty(certificateFileName) && !StringUtils.isEmpty(dtoType) &&
                 !StringUtils.isEmpty(targetCertsDirectory) && certificates != null && !certificates.isEmpty()) {
-            CommonUtil.cleanDirectory(targetCertsDirectory);
+            CommonUtil.cleanDirectory(targetCertsDirectory, true);
 
             JsonArray certs = new JsonArray();
             for (JsonObject certificate : certificates) {

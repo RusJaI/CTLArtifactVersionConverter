@@ -1,7 +1,7 @@
 package org.wso2.carbon.apimgt.ctl.artifact.converter.model;
 
 import com.google.gson.JsonObject;
-import org.wso2.carbon.apimgt.ctl.artifact.converter.Constants;
+import org.wso2.carbon.apimgt.ctl.artifact.converter.util.Constants;
 import org.wso2.carbon.apimgt.ctl.artifact.converter.exception.CTLArtifactConversionException;
 
 import java.util.ArrayList;

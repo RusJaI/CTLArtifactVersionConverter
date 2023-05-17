@@ -1,4 +1,4 @@
-package org.wso2.carbon.apimgt.ctl.artifact.converter.impl;
+package org.wso2.carbon.apimgt.ctl.artifact.converter.rest.impl;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.logging.Log;
@@ -10,6 +10,7 @@ import org.apache.cxf.jaxrs.ext.MessageContext;
 
 import org.wso2.carbon.apimgt.ctl.artifact.converter.exception.CTLArtifactConversionException;
 import org.wso2.carbon.apimgt.ctl.artifact.converter.util.CommonUtil;
+import org.wso2.carbon.apimgt.ctl.artifact.converter.util.Constants;
 import org.wso2.carbon.apimgt.rest.api.common.RestApiConstants;
 
 import java.io.File;

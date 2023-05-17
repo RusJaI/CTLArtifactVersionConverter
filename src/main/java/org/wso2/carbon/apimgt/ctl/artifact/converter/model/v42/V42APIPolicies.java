@@ -1,7 +1,7 @@
 package org.wso2.carbon.apimgt.ctl.artifact.converter.model.v42;
 
 import com.google.gson.JsonObject;
-import org.wso2.carbon.apimgt.ctl.artifact.converter.Constants;
+import org.wso2.carbon.apimgt.ctl.artifact.converter.util.Constants;
 import org.wso2.carbon.apimgt.ctl.artifact.converter.exception.CTLArtifactConversionException;
 import org.wso2.carbon.apimgt.ctl.artifact.converter.model.Sequences;
 import org.wso2.carbon.apimgt.ctl.artifact.converter.util.CommonUtil;
@@ -23,9 +23,12 @@ public class V42APIPolicies extends Sequences {
     @Override
     public void exportSequences(String srcPath, String targetPath, String exportFormat) throws CTLArtifactConversionException {
         String targetPoliciesDirectory = targetPath + File.separator + Constants.POLICIES_DIRECTORY;
+        String targetSequencesDirectory = targetPath + File.separator + Constants.SEQUENCES_DIRECTORY;
+
 
         if (sequencesMap.size() > 0) {
-            CommonUtil.cleanDirectory(targetPoliciesDirectory);
+            CommonUtil.cleanDirectory(targetSequencesDirectory, false);
+            CommonUtil.cleanDirectory(targetPoliciesDirectory, true);
             for (Map.Entry<String, JsonObject> entry : sequencesMap.entrySet()) {
                 String policyName = entry.getKey();
                 JsonObject policy = entry.getValue();

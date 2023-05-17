@@ -1,7 +1,7 @@
 package org.wso2.carbon.apimgt.ctl.artifact.converter.model.v42;
 
 import com.google.gson.JsonObject;
-import org.wso2.carbon.apimgt.ctl.artifact.converter.Constants;
+import org.wso2.carbon.apimgt.ctl.artifact.converter.util.Constants;
 import org.wso2.carbon.apimgt.ctl.artifact.converter.exception.CTLArtifactConversionException;
 import org.wso2.carbon.apimgt.ctl.artifact.converter.model.Documents;
 import org.wso2.carbon.apimgt.ctl.artifact.converter.util.CommonUtil;
@@ -30,7 +30,7 @@ public class V42Documents extends Documents {
             CTLArtifactConversionException {
         if (getDocuments() != null && !getDocuments().isEmpty()) {
             String targetDocsDirectory = targetPath + File.separator + Constants.DOCS_DIRECTORY;
-            CommonUtil.cleanDirectory(targetDocsDirectory);
+            CommonUtil.cleanDirectory(targetDocsDirectory, true);
 
             String srcDocsDirectory = srcPath + File.separator + Constants.DOCS_DIRECTORY;
             for (JsonObject document : getDocuments()) {

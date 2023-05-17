@@ -2,7 +2,7 @@ package org.wso2.carbon.apimgt.ctl.artifact.converter.model.v42;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import org.wso2.carbon.apimgt.ctl.artifact.converter.Constants;
+import org.wso2.carbon.apimgt.ctl.artifact.converter.util.Constants;
 import org.wso2.carbon.apimgt.ctl.artifact.converter.exception.CTLArtifactConversionException;
 import org.wso2.carbon.apimgt.ctl.artifact.converter.model.APIInfo;
 import org.wso2.carbon.apimgt.ctl.artifact.converter.util.ConfigFileUtil;

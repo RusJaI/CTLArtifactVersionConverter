@@ -1,7 +1,6 @@
 package org.wso2.carbon.apimgt.ctl.artifact.converter.util;
 
 import com.google.gson.JsonObject;
-import org.wso2.carbon.apimgt.ctl.artifact.converter.Constants;
 
 import java.util.ArrayList;
 import java.util.List;

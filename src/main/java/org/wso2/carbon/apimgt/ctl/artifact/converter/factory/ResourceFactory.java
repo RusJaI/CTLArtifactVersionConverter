@@ -1,6 +1,6 @@
 package org.wso2.carbon.apimgt.ctl.artifact.converter.factory;
 
-import org.wso2.carbon.apimgt.ctl.artifact.converter.Constants;
+import org.wso2.carbon.apimgt.ctl.artifact.converter.util.Constants;
 import org.wso2.carbon.apimgt.ctl.artifact.converter.model.APIInfo;
 import org.wso2.carbon.apimgt.ctl.artifact.converter.model.Certificates;
 import org.wso2.carbon.apimgt.ctl.artifact.converter.model.Documents;

@@ -5,6 +5,7 @@ import org.wso2.carbon.apimgt.ctl.artifact.converter.impl.APIInfoVersionConverte
 import org.wso2.carbon.apimgt.ctl.artifact.converter.impl.CertificateVersionConverter;
 import org.wso2.carbon.apimgt.ctl.artifact.converter.impl.DocumentVersionConverter;
 import org.wso2.carbon.apimgt.ctl.artifact.converter.util.CommonUtil;
+import org.wso2.carbon.apimgt.ctl.artifact.converter.util.Constants;
 
 import java.io.File;
 import java.util.ArrayList;

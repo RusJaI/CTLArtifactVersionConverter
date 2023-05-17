@@ -9,7 +9,6 @@ import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.parser.core.models.ParseOptions;
 import org.apache.commons.lang3.StringUtils;
 
-import org.wso2.carbon.apimgt.ctl.artifact.converter.Constants;
 import org.wso2.carbon.apimgt.ctl.artifact.converter.exception.CTLArtifactConversionException;
 import org.wso2.carbon.apimgt.ctl.artifact.converter.model.APIInfo;
 import org.wso2.carbon.apimgt.ctl.artifact.converter.model.v42.V42APIInfo;
@@ -174,14 +173,16 @@ public class APIInfoMappingUtil {
                 }
 
                 List<SecurityRequirement> requirements = op.getSecurity();
-                for (SecurityRequirement requirement : requirements) {
-                    if (requirement.get(Constants.DEFAULT_SECURITY) != null) {
-                        List<String> defaultScopes = requirement.get(Constants.DEFAULT_SECURITY);
-                        JsonArray scopes = new JsonArray();
-                        for (String scope : defaultScopes) {
-                            scopes.add(scope);
+                if (requirements != null) {
+                    for (SecurityRequirement requirement : requirements) {
+                        if (requirement.get(Constants.DEFAULT_SECURITY) != null) {
+                            List<String> defaultScopes = requirement.get(Constants.DEFAULT_SECURITY);
+                            JsonArray scopes = new JsonArray();
+                            for (String scope : defaultScopes) {
+                                scopes.add(scope);
+                            }
+                            uriTemplate.add("scopes", scopes);
                         }
-                        uriTemplate.add("scopes", scopes);
                     }
                 }
                 uriTemplates.add(uriTemplate);
@@ -284,29 +285,32 @@ public class APIInfoMappingUtil {
     }
 
     private static void populateAdditionalProperties(JsonObject src, JsonObject target) {
-        JsonObject properties = src.get("additionalProperties").getAsJsonObject();
-        JsonArray propertiesArray = new JsonArray();
-        JsonObject propertiesMap = new JsonObject();
-        if (properties != null & !properties.isEmpty()) {
-            for (String key : properties.keySet()) {
-                String value = properties.get(key).getAsString();
-                if (value != null) {
-                    JsonObject property = new JsonObject();
-                    property.addProperty("name", key.replace("__display", ""));
-                    property.addProperty("value", value);
-                    property.addProperty("display", key.contains("__display"));
-                    propertiesArray.add(property);
+        JsonElement additionalPropertiesObj = src.get("additionalProperties");
+        if (additionalPropertiesObj != null) {
+            JsonObject properties = src.get("additionalProperties").getAsJsonObject();
+            JsonArray propertiesArray = new JsonArray();
+            JsonObject propertiesMap = new JsonObject();
+            if (properties != null & !properties.isEmpty()) {
+                for (String key : properties.keySet()) {
+                    String value = properties.get(key).getAsString();
+                    if (value != null) {
+                        JsonObject property = new JsonObject();
+                        property.addProperty("name", key.replace("__display", ""));
+                        property.addProperty("value", value);
+                        property.addProperty("display", key.contains("__display"));
+                        propertiesArray.add(property);
 
-                    //when adding to map display is set back to false, otherwise two properties will be added to the API
-                    JsonObject mapProperty = new JsonObject();
-                    mapProperty.addProperty("name", key.replace("__display", ""));
-                    mapProperty.addProperty("value", value);
-                    mapProperty.addProperty("display", false);
-                    propertiesMap.add(key, mapProperty);
+                        //when adding to map display is set back to false, otherwise two properties will be added to the API
+                        JsonObject mapProperty = new JsonObject();
+                        mapProperty.addProperty("name", key.replace("__display", ""));
+                        mapProperty.addProperty("value", value);
+                        mapProperty.addProperty("display", false);
+                        propertiesMap.add(key, mapProperty);
+                    }
                 }
+                target.add("additionalProperties", propertiesArray);
+                target.add("additionalPropertiesMap", propertiesMap);
             }
-            target.add("additionalProperties", propertiesArray);
-            target.add("additionalPropertiesMap", propertiesMap);
         }
     }
 

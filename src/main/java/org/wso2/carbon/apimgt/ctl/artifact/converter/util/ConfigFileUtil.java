@@ -6,7 +6,6 @@ import com.google.gson.*;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.wso2.carbon.apimgt.ctl.artifact.converter.Constants;
 import org.wso2.carbon.apimgt.ctl.artifact.converter.exception.CTLArtifactConversionException;
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
@@ -193,7 +192,7 @@ public class ConfigFileUtil {
         } else {
             v42SwaggerFilePath = definitionsDirectory + File.separator + Constants.SWAGGER + Constants.YAML_EXTENSION;
         }
-        CommonUtil.cleanDirectory(definitionsDirectory);
+        CommonUtil.cleanDirectory(definitionsDirectory, true);
         try {
             Files.copy(new File(swaggerFilePath).toPath(), new File(v42SwaggerFilePath).toPath());
         } catch (IOException e) {

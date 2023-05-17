@@ -10,7 +10,6 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.wso2.carbon.apimgt.ctl.artifact.converter.Constants;
 import org.wso2.carbon.apimgt.ctl.artifact.converter.exception.CTLArtifactConversionException;
 
 import java.io.*;
@@ -32,13 +31,15 @@ public class CommonUtil {
         }
     }
 
-    public static void cleanDirectory(String pathToDirectory) throws CTLArtifactConversionException {
+    public static void cleanDirectory(String pathToDirectory, boolean recreate) throws CTLArtifactConversionException {
         File directory = new File(pathToDirectory);
         try {
             if (directory.exists()) {
                 FileUtils.deleteDirectory(directory);
             }
-            Files.createDirectories(Paths.get(pathToDirectory));
+            if (recreate) {
+                Files.createDirectories(Paths.get(pathToDirectory));
+            }
         } catch (IOException e) {
             String msg = "Error while cleaning Docs directory at " + directory;
             throw new CTLArtifactConversionException(msg, e);

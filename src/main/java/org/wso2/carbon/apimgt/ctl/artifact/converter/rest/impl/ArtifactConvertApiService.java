@@ -1,4 +1,4 @@
-package org.wso2.carbon.apimgt.ctl.artifact.converter;
+package org.wso2.carbon.apimgt.ctl.artifact.converter.rest.impl;
 
 import org.wso2.carbon.apimgt.ctl.artifact.converter.*;
 import org.wso2.carbon.apimgt.ctl.artifact.converter.dto.*;
