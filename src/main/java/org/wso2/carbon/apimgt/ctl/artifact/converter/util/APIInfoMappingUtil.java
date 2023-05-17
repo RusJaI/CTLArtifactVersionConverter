@@ -92,6 +92,7 @@ public class APIInfoMappingUtil {
         populateAPISecurity(src, target);
         populateThrottlePolicies(src, target);
         populateTransports(src, target);
+        populateWSDLInfo(src, target);
         populateUriTemplates(srcPath, target);
     }
     public static void addV32ToV42ProductMappings(JsonObject src, JsonObject target, String srcPath) throws
@@ -187,6 +188,27 @@ public class APIInfoMappingUtil {
             }
         }
         target.add("operations", uriTemplates);
+    }
+
+    private static void populateWSDLInfo(JsonObject src, JsonObject target) {
+        String type = CommonUtil.readElementAsString(src, "type");
+        if (Constants.SOAP.equalsIgnoreCase(type)) {
+            JsonObject wsdlInfo = new JsonObject();
+            wsdlInfo.addProperty("type", "WSDL");
+            target.add("wsdlInfo", wsdlInfo);
+        }
+
+        //3.2.0 artifact does not have data for this property
+        JsonObject idObject = src.get("id").getAsJsonObject();
+        String provider = CommonUtil.readElementAsString(idObject, "providerName");
+        String name = CommonUtil.readElementAsString(idObject, "apiName");
+        String version = CommonUtil.readElementAsString(idObject, "version");
+
+        String wsdlName = provider + "--" + name + version + ".wsdl";
+
+        String wsdlURL = "/registry/resource/_system/governance/apimgt/applicationdata/provider/" +
+                provider + "/" + name + "/" + version + "/" + wsdlName;
+        target.addProperty("wsdlUrl", wsdlURL);
     }
 
     private static void populateDependentAPIs(JsonObject src, JsonObject target) {
