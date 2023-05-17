@@ -146,7 +146,7 @@ public class SequencesMappingUtil {
         return sequences;
     }
 
-    public static List<JsonObject> readV32Sequences(String pathToSequences, String direction, String type) throws
+    private static List<JsonObject> readV32Sequences(String pathToSequences, String direction, String type) throws
             CTLArtifactConversionException {
         List<JsonObject> sequences = new ArrayList<>();
         pathToSequences = pathToSequences + File.separator + direction + Constants.SEQUENCES_SUFFIX;
@@ -192,7 +192,7 @@ public class SequencesMappingUtil {
             JsonObject sequence = sequencesMap.get(sequenceName);
             if (sequence != null) {
                 JsonObject  seqConfig = new JsonObject();
-                seqConfig.addProperty("policyName", sequence.get("name").getAsString());
+                seqConfig.addProperty("policyName", CommonUtil.readElementAsString(sequence, "name"));
                 seqConfig.addProperty("policyVersion", "v1");
                 seqConfig.add("parameters", new JsonObject());
 
