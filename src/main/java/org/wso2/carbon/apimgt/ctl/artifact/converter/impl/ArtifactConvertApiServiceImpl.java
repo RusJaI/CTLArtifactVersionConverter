@@ -17,12 +17,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import javax.ws.rs.core.Response;
 
+public class ArtifactConvertApiServiceImpl implements ArtifactConvertApiService {
+    private static final Log log = LogFactory.getLog(ArtifactConvertApiServiceImpl.class);
 
-public class CtlArtifactApiServiceImpl implements CtlArtifactApiService {
-    private static final Log log = LogFactory.getLog(CtlArtifactApiServiceImpl.class);
-
-    public Response convertCTLArtifact(InputStream fileInputStream, Attachment fileDetail, String srcVersion,
-                                       String targetVersion, String exportFormat, String type, MessageContext messageContext) {
+    public Response convertCTLArtifact(InputStream fileInputStream, Attachment fileDetail, String srcVersion, String targetVersion, String exportFormat, String type, MessageContext messageContext) {
         try {
             log.info("Migrating API artifact from version " + srcVersion + " to " + targetVersion);
             //Transfer input stream to APIArchive.zip inside tmp folder

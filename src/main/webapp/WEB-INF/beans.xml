@@ -14,7 +14,7 @@
   <bean class="org.springframework.beans.factory.config.PreferencesPlaceholderConfigurer"/>
   <jaxrs:server id="services" address="/">
     <jaxrs:serviceBeans>
-      <bean class="org.wso2.carbon.apimgt.ctl.artifact.converter.CtlArtifactApi"/>
+      <bean class="org.wso2.carbon.apimgt.ctl.artifact.converter.ArtifactConvertApi"/>
     </jaxrs:serviceBeans>
     <jaxrs:providers>
       <bean class="com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider"/>

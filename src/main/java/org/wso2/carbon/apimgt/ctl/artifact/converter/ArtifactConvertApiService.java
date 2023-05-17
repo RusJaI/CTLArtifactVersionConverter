@@ -20,6 +20,6 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 
 
-public interface CtlArtifactApiService {
+public interface ArtifactConvertApiService {
       public Response convertCTLArtifact(InputStream fileInputStream, Attachment fileDetail, String srcVersion, String targetVersion, String exportFormat, String type, MessageContext messageContext) throws CTLArtifactConversionException;
 }
