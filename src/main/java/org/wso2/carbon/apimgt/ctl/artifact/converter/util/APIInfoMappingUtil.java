@@ -297,7 +297,12 @@ public class APIInfoMappingUtil {
                     property.addProperty("display", key.contains("__display"));
                     propertiesArray.add(property);
 
-                    propertiesMap.add(key, property);
+                    //when adding to map display is set back to false, otherwise two properties will be added to the API
+                    JsonObject mapProperty = new JsonObject();
+                    mapProperty.addProperty("name", key.replace("__display", ""));
+                    mapProperty.addProperty("value", value);
+                    mapProperty.addProperty("display", false);
+                    propertiesMap.add(key, mapProperty);
                 }
             }
             target.add("additionalProperties", propertiesArray);
