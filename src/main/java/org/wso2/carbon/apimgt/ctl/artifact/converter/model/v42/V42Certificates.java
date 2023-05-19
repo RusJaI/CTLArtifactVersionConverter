@@ -22,7 +22,7 @@ public class V42Certificates extends Certificates {
     @Override
     public void exportCertificates(String targetPath, String exportFormat) throws CTLArtifactConversionException {
         exportCertificatesOfType(Constants.ENDPOINT_CERT_TYPE, targetPath, exportFormat);
-        exportCertificatesOfType(Constants.CLIENT_CERTIFICATES_TYPE, targetPath, exportFormat);
+        exportCertificatesOfType(Constants.CLIENT_CERT_TYPE, targetPath, exportFormat);
     }
 
     private void exportCertificatesOfType(String type, String targetPath,
@@ -40,7 +40,7 @@ public class V42Certificates extends Certificates {
         } else if (Constants.ENDPOINT_CERT_TYPE.equals(type)) {
             targetCertsDirectory = targetPath + File.separator + Constants.ENDPOINT_CERTIFICATES_DIRECTORY;
             certificateFileName = targetCertsDirectory + File.separator + Constants.ENDPOINT_CERTIFICATES_CONFIG;
-            dtoType = Constants.CLIENT_CERTIFICATES_TYPE;
+            dtoType = Constants.ENDPOINT_CERT_TYPE;
             certificates = getEndpointCertificates();
         }
 

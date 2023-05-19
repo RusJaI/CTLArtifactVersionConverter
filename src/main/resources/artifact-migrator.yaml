@@ -48,7 +48,7 @@ paths:
                   description: |
                     JSON/YAML file consisting of parameters required for artifact conversion.
                     {
-                      "gatewayEnvironments": [
+                      "deploymentEnvironments": [
                         {
                           "name" : "Production",
                           "displayOnDevportal" : true,

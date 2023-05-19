@@ -55,9 +55,10 @@ public class APIInfoMappingUtil {
             //add deployment-environments config if 3.2.0 API is in published or prototypes states
             if (Constants.PUBLISHED.equals(status) || Constants.PROTOTYPED.equals(status)) {
                 if (params != null && params.has("deploymentEnvironments")) {
-                    JsonArray deploymentEnvironments = params.getAsJsonArray("deploymentEnvironments");
-                    if (deploymentEnvironments != null && deploymentEnvironments.size() > 0) {
-                        deploymentEnvironments.iterator().forEachRemaining(
+                    JsonArray deploymentEnvironmentsFromParams = params.getAsJsonArray("deploymentEnvironments");
+                    JsonArray deploymentEnvironments = new JsonArray();
+                    if (deploymentEnvironmentsFromParams != null && deploymentEnvironmentsFromParams.size() > 0) {
+                        deploymentEnvironmentsFromParams.iterator().forEachRemaining(
                                 environment -> {
                                     JsonObject environmentObject = new JsonObject();
                                     JsonObject envObj = environment.getAsJsonObject();
@@ -73,10 +74,10 @@ public class APIInfoMappingUtil {
                 } else {
                     log.info("Params file was not provided, hence using the deployment environments specified in the " +
                             "src artifact for " + srcPath);
-                    JsonArray deploymentEnvironments = CommonUtil.readElementAsJsonArray(srcAPIInfoJson, "environments");
-
-                    if (deploymentEnvironments != null && deploymentEnvironments.size() > 0) {
-                        deploymentEnvironments.iterator().forEachRemaining(
+                    JsonArray v32DeploymentEnvironments = CommonUtil.readElementAsJsonArray(srcAPIInfoJson, "environments");
+                    JsonArray deploymentEnvironments = new JsonArray();
+                    if (v32DeploymentEnvironments != null && v32DeploymentEnvironments.size() > 0) {
+                        v32DeploymentEnvironments.iterator().forEachRemaining(
                                 environment -> {
                                     JsonObject environmentObject = new JsonObject();
                                     environmentObject.addProperty("deploymentEnvironment", environment.getAsString());

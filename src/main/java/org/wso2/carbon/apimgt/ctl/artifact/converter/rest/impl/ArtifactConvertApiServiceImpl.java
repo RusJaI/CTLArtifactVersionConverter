@@ -84,11 +84,11 @@ public class ArtifactConvertApiServiceImpl implements ArtifactConvertApiService 
                 byte[] paramsBytes = IOUtils.toByteArray(paramsInputStream);
                 String paramsString = new String(paramsBytes, StandardCharsets.UTF_8);
 
-                if (!StringUtils.isEmpty(fileName) && !fileName.endsWith(Constants.JSON_EXTENSION)) {
+                if (!StringUtils.isEmpty(fileName) && fileName.endsWith(Constants.JSON_EXTENSION)) {
                     if (!StringUtils.isEmpty(paramsString)) {
                         paramsJson = new Gson().fromJson(paramsString, JsonObject.class);
                     }
-                } else if (!StringUtils.isEmpty(fileName) && !fileName.endsWith(Constants.YAML_EXTENSION)) {
+                } else if (!StringUtils.isEmpty(fileName) && fileName.endsWith(Constants.YAML_EXTENSION)) {
                     Yaml yaml = new Yaml();
                     Object yamlObject = yaml.load(paramsString);
                     String jsonString = new Gson().toJson(yamlObject);
