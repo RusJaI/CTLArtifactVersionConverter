@@ -9,6 +9,7 @@ import org.wso2.carbon.apimgt.ctl.artifact.converter.util.ConfigFileUtil;
 import org.wso2.carbon.apimgt.ctl.artifact.converter.util.SequencesMappingUtil;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -43,10 +44,12 @@ public class V42APIPolicies extends Sequences {
 
                 //write policy j2 file
                 String policyJ2FilePath = targetPoliciesDirectory + File.separator + policyFileName + ".j2";
-                try (OutputStream out = new FileOutputStream(policyJ2FilePath)) {
-                    out.write(policySpec.getBytes());
+                try (BufferedWriter out = new BufferedWriter(new OutputStreamWriter(
+                        new FileOutputStream(policyJ2FilePath), StandardCharsets.UTF_8))) {
+                    out.write(policySpec);
                 } catch (IOException e) {
                     String msg = "Error while writing policy j2 file at: " + policyJ2FilePath;
+                    throw new CTLArtifactConversionException(msg, e);
                 }
             }
         }

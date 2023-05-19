@@ -43,6 +43,19 @@ paths:
                   type: string
                   description: Zip archive consisting of export artifact from source version
                   format: binary
+                params:
+                  type: string
+                  description: |
+                    JSON/YAML file consisting of parameters required for artifact conversion.
+                    {
+                      "gatewayEnvironments": [
+                        {
+                          "name" : "Production",
+                          "displayOnDevportal" : true,
+                        } 
+                      ],
+                    }
+                  format: binary
       responses:
         200:
           description: |

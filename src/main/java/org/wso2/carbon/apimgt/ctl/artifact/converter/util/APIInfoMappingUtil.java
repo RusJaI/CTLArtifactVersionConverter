@@ -2,6 +2,7 @@ package org.wso2.carbon.apimgt.ctl.artifact.converter.util;
 
 import com.google.gson.*;
 import io.swagger.parser.OpenAPIParser;
+import io.swagger.v3.core.util.Json;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.Operation;
 import io.swagger.v3.oas.models.PathItem;
@@ -22,21 +23,22 @@ import java.util.*;
 public class APIInfoMappingUtil {
     private static final Log log = LogFactory.getLog(APIInfoMappingUtil.class);
     public static void mapAPIInfo(APIInfo srcAPIInfo, APIInfo targetAPIInfo, String srcVersion,
-                                  String targetVersion, String srcPath) throws CTLArtifactConversionException {
+                                  String targetVersion, String srcPath, JsonObject params) throws CTLArtifactConversionException {
         if (srcVersion.equals(Constants.V320) && targetVersion.equals(Constants.V420)) {
-            v32tov42APIInfo(srcAPIInfo, targetAPIInfo, Constants.API_TYPE, srcPath);
+            v32tov42APIInfo(srcAPIInfo, targetAPIInfo, Constants.API_TYPE, srcPath, params);
         }
         //todo: implement other versions, if no matching conversion found(unlikely to happen), return the same list
     }
 
     public static void mapAPIProductInfo(APIInfo srcAPIInfo, APIInfo targetAPIInfo, String srcVersion,
-                                         String targetVersion, String srcPath) throws CTLArtifactConversionException {
+                                         String targetVersion, String srcPath, JsonObject params) throws CTLArtifactConversionException {
         if (srcVersion.equals(Constants.V320) && targetVersion.equals(Constants.V420)) {
-            v32tov42APIInfo(srcAPIInfo, targetAPIInfo, Constants.API_PRIDUCT_TYPE, srcPath);
+            v32tov42APIInfo(srcAPIInfo, targetAPIInfo, Constants.API_PRIDUCT_TYPE, srcPath, params);
         }
     }
 
-    public static void v32tov42APIInfo(APIInfo srcAPIInfo, APIInfo targetAPIInfo, String type, String srcPath) throws CTLArtifactConversionException {
+    public static void v32tov42APIInfo(APIInfo srcAPIInfo, APIInfo targetAPIInfo, String type, String srcPath, JsonObject params)
+            throws CTLArtifactConversionException {
         JsonObject srcAPIInfoJson = srcAPIInfo.getApiInfo();
         String status;
         if (srcAPIInfoJson != null && !srcAPIInfoJson.isEmpty()) {
@@ -50,20 +52,40 @@ public class APIInfoMappingUtil {
             }
             targetAPIInfo.setApiInfo(targetAPIInfoJson);
 
-            //add deployment-environments config if 3.2.0 API is in published state
-            if (Constants.PUBLISHED.equals(status)) {
-                JsonArray deploymentEnvironments = CommonUtil.readElementAsJsonArray(srcAPIInfoJson, "environments");
-                if (deploymentEnvironments != null && deploymentEnvironments.size() > 0) {
-                    deploymentEnvironments.iterator().forEachRemaining(
-                            environment -> {
-                                JsonObject environmentObject = new JsonObject();
-                                //environmentObject.addProperty("deploymentEnvironment", environment.getAsString());
-                                environmentObject.addProperty("deploymentEnvironment", "Default");
-                                environmentObject.addProperty("displayOnDevportal", true);
-                                deploymentEnvironments.add(environmentObject);
-                            }
-                    );
-                    ((V42APIInfo) targetAPIInfo).setDeploymentEnvironments(deploymentEnvironments);
+            //add deployment-environments config if 3.2.0 API is in published or prototypes states
+            if (Constants.PUBLISHED.equals(status) || Constants.PROTOTYPED.equals(status)) {
+                if (params != null && params.has("deploymentEnvironments")) {
+                    JsonArray deploymentEnvironments = params.getAsJsonArray("deploymentEnvironments");
+                    if (deploymentEnvironments != null && deploymentEnvironments.size() > 0) {
+                        deploymentEnvironments.iterator().forEachRemaining(
+                                environment -> {
+                                    JsonObject environmentObject = new JsonObject();
+                                    JsonObject envObj = environment.getAsJsonObject();
+                                    environmentObject.addProperty("deploymentEnvironment", CommonUtil.
+                                            readElementAsString(envObj, "name"));
+                                    environmentObject.addProperty("displayOnDevportal", CommonUtil.
+                                            readElementAsBoolean(envObj, "displayOnDevportal"));
+                                    deploymentEnvironments.add(environmentObject);
+                                }
+                        );
+                        ((V42APIInfo) targetAPIInfo).setDeploymentEnvironments(deploymentEnvironments);
+                    }
+                } else {
+                    log.info("Params file was not provided, hence using the deployment environments specified in the " +
+                            "src artifact for " + srcPath);
+                    JsonArray deploymentEnvironments = CommonUtil.readElementAsJsonArray(srcAPIInfoJson, "environments");
+
+                    if (deploymentEnvironments != null && deploymentEnvironments.size() > 0) {
+                        deploymentEnvironments.iterator().forEachRemaining(
+                                environment -> {
+                                    JsonObject environmentObject = new JsonObject();
+                                    environmentObject.addProperty("deploymentEnvironment", environment.getAsString());
+                                    environmentObject.addProperty("displayOnDevportal", true);
+                                    deploymentEnvironments.add(environmentObject);
+                                }
+                        );
+                        ((V42APIInfo) targetAPIInfo).setDeploymentEnvironments(deploymentEnvironments);
+                    }
                 }
             }
         }

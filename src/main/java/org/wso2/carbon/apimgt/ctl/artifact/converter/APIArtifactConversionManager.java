@@ -1,5 +1,6 @@
 package org.wso2.carbon.apimgt.ctl.artifact.converter;
 
+import com.google.gson.JsonObject;
 import org.wso2.carbon.apimgt.ctl.artifact.converter.exception.CTLArtifactConversionException;
 import org.wso2.carbon.apimgt.ctl.artifact.converter.impl.APIInfoVersionConverter;
 import org.wso2.carbon.apimgt.ctl.artifact.converter.impl.APISequencesConverter;
@@ -17,15 +18,17 @@ public class APIArtifactConversionManager {
     private String srcPath;
     private String targetPath;
     private String format;
+    private JsonObject params;
 
 
     public APIArtifactConversionManager(String srcVersion, String targetVersion, String srcPath, String targetPath,
-                                        String format) throws CTLArtifactConversionException {
+                                        String format, JsonObject params) throws CTLArtifactConversionException {
         this.srcVersion = srcVersion;
         this.targetVersion = targetVersion;
         this.srcPath = srcPath;
         this.targetPath = targetPath;
         this.format = format;
+        this.params = params;
         init();
     }
 
@@ -33,7 +36,8 @@ public class APIArtifactConversionManager {
         if (CommonUtil.validateSrcAndTargetVersions(srcVersion, targetVersion)) {
             converters.add(new DocumentVersionConverter(srcVersion, targetVersion, srcPath, targetPath, format));
             converters.add(new CertificateVersionConverter(srcVersion, targetVersion, srcPath, targetPath, format));
-            converters.add(new APIInfoVersionConverter(srcVersion, targetVersion, srcPath, targetPath, false, format));
+            converters.add(new APIInfoVersionConverter(srcVersion, targetVersion, srcPath, targetPath, false,
+                    params, format));
             converters.add(new APISequencesConverter(srcVersion, targetVersion, srcPath, targetPath, format));
         } else {
             String msg = "Invalid source or target version";

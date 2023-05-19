@@ -87,6 +87,7 @@ public class Constants {
     public static final char ZIP_FILE_SEPARATOR = '/';
     public static final char WIN_ZIP_FILE_SEPARATOR = '\\';
     public static final String PUBLISHED = "PUBLISHED";
+    public static final String PROTOTYPED = "PROTOTYPED";
     public static final String GRAPHQL = "GRAPHQL";
     public static final String SOAP = "SOAP";
     public static final String GRAPHQL_SCHEMA_FILE_NAME = "schema.graphql";

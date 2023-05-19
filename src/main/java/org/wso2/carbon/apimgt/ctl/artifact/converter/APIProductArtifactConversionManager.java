@@ -1,5 +1,6 @@
 package org.wso2.carbon.apimgt.ctl.artifact.converter;
 
+import com.google.gson.JsonObject;
 import org.wso2.carbon.apimgt.ctl.artifact.converter.exception.CTLArtifactConversionException;
 import org.wso2.carbon.apimgt.ctl.artifact.converter.impl.APIInfoVersionConverter;
 import org.wso2.carbon.apimgt.ctl.artifact.converter.impl.CertificateVersionConverter;
@@ -17,16 +18,18 @@ public class APIProductArtifactConversionManager {
     private String srcPath;
     private String targetPath;
     private String format;
+    private JsonObject params;
     public List<ResourceVersionConverter> converters = new ArrayList<>();
     private List<String> dependentAPIs = new ArrayList<>();
 
     public APIProductArtifactConversionManager(String srcVersion, String targetVersion, String srcPath, String targetPath,
-                                        String format) throws CTLArtifactConversionException {
+                                        String format, JsonObject params) throws CTLArtifactConversionException {
         this.srcVersion = srcVersion;
         this.targetVersion = targetVersion;
         this.srcPath = srcPath;
         this.targetPath = targetPath;
         this.format = format;
+        this.params = params;
         init();
     }
 
@@ -35,7 +38,8 @@ public class APIProductArtifactConversionManager {
             converters.add(new DocumentVersionConverter(srcVersion, targetVersion, srcPath, targetPath, format));
             //API Product can have client certificates
             converters.add(new CertificateVersionConverter(srcVersion, targetVersion, srcPath, targetPath, format));
-            converters.add(new APIInfoVersionConverter(srcVersion, targetVersion, srcPath, targetPath, true, format));
+            converters.add(new APIInfoVersionConverter(srcVersion, targetVersion, srcPath, targetPath, true,
+                    params, format));
 
             String pathToAPIs = srcPath + File.separator + Constants.APIS_DIRECTORY;
             File apisFolder = new File(pathToAPIs);
@@ -64,7 +68,7 @@ public class APIProductArtifactConversionManager {
             String srcAPIPath = srcPath + File.separator + Constants.APIS_DIRECTORY + File.separator + dependentAPI;
             String targetAPIPath = targetPath + File.separator + Constants.APIS_DIRECTORY + File.separator + dependentAPI;
             apiArtifactConversionManager = new APIArtifactConversionManager(
-                    srcVersion, targetVersion, srcAPIPath, targetAPIPath, format);
+                    srcVersion, targetVersion, srcAPIPath, targetAPIPath, format, params);
             apiArtifactConversionManager.convert();
         }
         return true;

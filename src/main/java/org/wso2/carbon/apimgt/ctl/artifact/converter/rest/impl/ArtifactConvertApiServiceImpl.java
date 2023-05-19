@@ -1,8 +1,13 @@
 package org.wso2.carbon.apimgt.ctl.artifact.converter.rest.impl;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.cxf.jaxrs.ext.multipart.ContentDisposition;
 import org.wso2.carbon.apimgt.ctl.artifact.converter.*;
 
 import org.apache.cxf.jaxrs.ext.multipart.Attachment;
@@ -12,16 +17,20 @@ import org.wso2.carbon.apimgt.ctl.artifact.converter.exception.CTLArtifactConver
 import org.wso2.carbon.apimgt.ctl.artifact.converter.util.CommonUtil;
 import org.wso2.carbon.apimgt.ctl.artifact.converter.util.Constants;
 import org.wso2.carbon.apimgt.rest.api.common.RestApiConstants;
+import org.yaml.snakeyaml.Yaml;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import javax.ws.rs.core.Response;
 
 public class ArtifactConvertApiServiceImpl implements ArtifactConvertApiService {
     private static final Log log = LogFactory.getLog(ArtifactConvertApiServiceImpl.class);
 
-    public Response convertCTLArtifact(InputStream fileInputStream, Attachment fileDetail, String srcVersion, String targetVersion, String exportFormat, String type, MessageContext messageContext) {
+    public Response convertCTLArtifact(InputStream fileInputStream, Attachment fileDetail, String srcVersion,
+                                       String targetVersion, String exportFormat, String type, InputStream paramsInputStream, Attachment paramsDetail,
+                                       MessageContext messageContext) {
         try {
             log.info("Migrating API artifact from version " + srcVersion + " to " + targetVersion);
             //Transfer input stream to APIArchive.zip inside tmp folder
@@ -41,13 +50,15 @@ public class ArtifactConvertApiServiceImpl implements ArtifactConvertApiService 
             File copyAPIArtifactFile = new File(targetArtifactPath);
             FileUtils.copyDirectory(srcAPIArtifactFile, copyAPIArtifactFile);
 
+            JsonObject paramsJson = readParamsYaml(paramsInputStream, paramsDetail);
+
             if (Constants.API_PRIDUCT_TYPE.equals(type)) {
-                APIProductArtifactConversionManager productConversionManager = new APIProductArtifactConversionManager(srcVersion, targetVersion,
-                        srcArtifactPath, targetArtifactPath, exportFormat);
+                APIProductArtifactConversionManager productConversionManager = new APIProductArtifactConversionManager(
+                        srcVersion, targetVersion, srcArtifactPath, targetArtifactPath, exportFormat, paramsJson);
                 productConversionManager.convert();
             } else {
-                APIArtifactConversionManager apiConversionManager = new APIArtifactConversionManager(srcVersion, targetVersion,
-                        srcArtifactPath, targetArtifactPath, exportFormat);
+                APIArtifactConversionManager apiConversionManager = new APIArtifactConversionManager(srcVersion,
+                        targetVersion, srcArtifactPath, targetArtifactPath, exportFormat, paramsJson);
                 apiConversionManager.convert();
             }
 
@@ -60,5 +71,33 @@ public class ArtifactConvertApiServiceImpl implements ArtifactConvertApiService 
             log.error("Error occurred while converting the artifact", e);
             return Response.serverError().entity("Error occurred while converting the artifact").build();
         }
+    }
+
+    private JsonObject readParamsYaml (InputStream paramsInputStream, Attachment paramsDetail) throws
+            CTLArtifactConversionException {
+        JsonObject paramsJson = new JsonObject();
+        try {
+            if (paramsInputStream != null && paramsDetail != null) {
+                ContentDisposition contentDisposition = paramsDetail.getContentDisposition();
+                String fileName = contentDisposition.getParameter(RestApiConstants.CONTENT_DISPOSITION_FILENAME);
+
+                byte[] paramsBytes = IOUtils.toByteArray(paramsInputStream);
+                String paramsString = new String(paramsBytes, StandardCharsets.UTF_8);
+
+                if (!StringUtils.isEmpty(fileName) && !fileName.endsWith(Constants.JSON_EXTENSION)) {
+                    if (!StringUtils.isEmpty(paramsString)) {
+                        paramsJson = new Gson().fromJson(paramsString, JsonObject.class);
+                    }
+                } else if (!StringUtils.isEmpty(fileName) && !fileName.endsWith(Constants.YAML_EXTENSION)) {
+                    Yaml yaml = new Yaml();
+                    Object yamlObject = yaml.load(paramsString);
+                    String jsonString = new Gson().toJson(yamlObject);
+                    paramsJson = new Gson().fromJson(jsonString, JsonObject.class);
+                }
+            }
+        } catch (IOException e) {
+            throw new CTLArtifactConversionException("Error occurred while reading the params file", e);
+        }
+        return paramsJson;
     }
 }

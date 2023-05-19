@@ -37,7 +37,9 @@ public class V42APIInfo extends APIInfo {
             }
             ConfigFileUtil.deleteConfigFile(targetPath + File.separator + Constants.META_INFO_DIRECTORY,
                     Constants.SWAGGER);
-            ConfigFileUtil.writeV42DeploymentEnvironmentsFile(deploymentEnvironments,targetPath, exportFormat);
+            if (deploymentEnvironments != null && deploymentEnvironments.asList().size() > 0) {
+                ConfigFileUtil.writeV42DeploymentEnvironmentsFile(deploymentEnvironments, targetPath, exportFormat);
+            }
         }
     }
 
