@@ -14,10 +14,8 @@ public class CertificatesMappingUtil {
                                                    String srcVersion, String targetVersion) {
         if (srcVersion.equals(Constants.V320) && targetVersion.equals(Constants.V420)) {
             targetCertificates.setEndpointCertificates(v32tov42EPCertificates(srcCertificates.getEndpointCertificates()));
-            ((V42Certificates)targetCertificates).setEndpointCrts(getCrtsFromV32CertList(srcCertificates.getEndpointCertificates()));
 
             targetCertificates.setClientCertificates(v32tov42ClientCertificates(srcCertificates.getClientCertificates()));
-            ((V42Certificates)targetCertificates).setClientCrts(getCrtsFromV32CertList(srcCertificates.getClientCertificates()));
         }
         //todo: implement other versions, if no matching conversion found(unlikely to happen), return the same list
     }
@@ -30,6 +28,7 @@ public class CertificatesMappingUtil {
             v42Certificate.addProperty("alias", alias);
             v42Certificate.addProperty("endpoint", CommonUtil.readElementAsString(v32certificate, "hostName"));
             v42Certificate.addProperty("certificate", alias + Constants.CRT_EXTENSION);
+            v42Certificate.addProperty("crtContent", CommonUtil.readElementAsString(v32certificate, "certificate"));
             v42Certificates.add(v42Certificate);
         }
         return v42Certificates;
@@ -44,6 +43,7 @@ public class CertificatesMappingUtil {
             v42Certificate.addProperty("certificate", alias + Constants.CRT_EXTENSION);
             v42Certificate.addProperty("tierName", CommonUtil.readElementAsString(v32certificate, "tierName"));
             v42Certificate.add("apiIdentifier", v32certificate.get("apiIdentifier"));
+            v42Certificate.addProperty("crtContent", CommonUtil.readElementAsString(v32certificate, "certificate"));
             v42Certificates.add(v42Certificate);
         }
         return v42Certificates;

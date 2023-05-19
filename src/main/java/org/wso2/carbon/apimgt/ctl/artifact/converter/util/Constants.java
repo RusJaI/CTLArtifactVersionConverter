@@ -12,6 +12,7 @@ public class Constants {
     public static final String INLINE_CONTENTS_DIRECTORY = "InlineContents";
     public static final String FILE_CONTENTS_DIRECTORY = "FileContents";
     public static final String DEFINITIONS_DIRECTORY = "Definitions";
+    public static final String WSDL_DIRECTORY = "WSDL";
     public static final String APIS_DIRECTORY = "APIs";
     public static final String DOCS_CONFIG_FILE = "docs";
     public static final String DOCS_YAML = "docs.yaml";
@@ -55,6 +56,7 @@ public class Constants {
     public static final String XML_EXTENSION = ".xml";
     public static final String CRT_EXTENSION = ".crt";
     public static final String ZIP_EXTENSION = ".zip";
+    public static final String WSDL_EXTENSION = ".wsdl";
     public static final String BEGIN_CERTIFICATE_STRING = "-----BEGIN CERTIFICATE-----";
     public static final String END_CERTIFICATE_STRING = "-----END CERTIFICATE-----";
     public static final String IN = "in";

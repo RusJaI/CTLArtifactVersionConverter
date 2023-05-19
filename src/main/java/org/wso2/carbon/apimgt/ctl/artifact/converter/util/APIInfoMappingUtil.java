@@ -9,6 +9,8 @@ import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.parser.core.models.ParseOptions;
 import org.apache.commons.lang3.StringUtils;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.wso2.carbon.apimgt.ctl.artifact.converter.exception.CTLArtifactConversionException;
 import org.wso2.carbon.apimgt.ctl.artifact.converter.model.APIInfo;
 import org.wso2.carbon.apimgt.ctl.artifact.converter.model.v42.V42APIInfo;
@@ -18,6 +20,7 @@ import java.io.File;
 import java.util.*;
 
 public class APIInfoMappingUtil {
+    private static final Log log = LogFactory.getLog(APIInfoMappingUtil.class);
     public static void mapAPIInfo(APIInfo srcAPIInfo, APIInfo targetAPIInfo, String srcVersion,
                                   String targetVersion, String srcPath) throws CTLArtifactConversionException {
         if (srcVersion.equals(Constants.V320) && targetVersion.equals(Constants.V420)) {
@@ -49,17 +52,19 @@ public class APIInfoMappingUtil {
 
             //add deployment-environments config if 3.2.0 API is in published state
             if (Constants.PUBLISHED.equals(status)) {
-                JsonArray deploymentEnvironments = new JsonArray();
-                CommonUtil.readElementAsJsonArray(srcAPIInfoJson, "environments").iterator().forEachRemaining(
-                        environment -> {
-                            JsonObject environmentObject = new JsonObject();
-                            //environmentObject.addProperty("deploymentEnvironment", environment.getAsString());
-                            environmentObject.addProperty("deploymentEnvironment", "Default");
-                            environmentObject.addProperty("displayOnDevportal", true);
-                            deploymentEnvironments.add(environmentObject);
-                        }
-                );
-                ((V42APIInfo)targetAPIInfo).setDeploymentEnvironments(deploymentEnvironments);
+                JsonArray deploymentEnvironments = CommonUtil.readElementAsJsonArray(srcAPIInfoJson, "environments");
+                if (deploymentEnvironments != null && deploymentEnvironments.size() > 0) {
+                    deploymentEnvironments.iterator().forEachRemaining(
+                            environment -> {
+                                JsonObject environmentObject = new JsonObject();
+                                //environmentObject.addProperty("deploymentEnvironment", environment.getAsString());
+                                environmentObject.addProperty("deploymentEnvironment", "Default");
+                                environmentObject.addProperty("displayOnDevportal", true);
+                                deploymentEnvironments.add(environmentObject);
+                            }
+                    );
+                    ((V42APIInfo) targetAPIInfo).setDeploymentEnvironments(deploymentEnvironments);
+                }
             }
         }
     }
@@ -91,7 +96,7 @@ public class APIInfoMappingUtil {
         populateAPISecurity(src, target);
         populateThrottlePolicies(src, target);
         populateTransports(src, target);
-        populateWSDLInfo(src, target);
+        populateWSDLInfo(srcPath, src, target);
         populateUriTemplates(srcPath, target);
     }
     public static void addV32ToV42ProductMappings(JsonObject src, JsonObject target, String srcPath) throws
@@ -99,9 +104,11 @@ public class APIInfoMappingUtil {
         addV32ToV42CommonMappings(src, target, srcPath);
 
         //API Product Specific properties
-        JsonObject idObject = src.get("id").getAsJsonObject();
-        populateAPIPropertyAsString(idObject, target, "providerName", "provider");
-        populateAPIPropertyAsString(idObject, target, "apiProductName", "name");
+        JsonObject idObject = src.getAsJsonObject("id");
+        if (idObject != null) {
+            populateAPIPropertyAsString(idObject, target, "providerName", "provider");
+            populateAPIPropertyAsString(idObject, target, "apiProductName", "name");
+        }
         populateAPIPropertyAsString(src, target, "state", "state");
         populateDependentAPIs(src, target);
 
@@ -121,10 +128,12 @@ public class APIInfoMappingUtil {
         addV32ToV42CommonMappings(src, target, srcPath);
 
         // API Specific properties
-        JsonObject idObject = src.get("id").getAsJsonObject();
-        populateAPIPropertyAsString(idObject, target, "providerName", "provider");
-        populateAPIPropertyAsString(idObject, target, "apiName", "name");
-        populateAPIPropertyAsString(idObject, target, "version", "version");
+        JsonObject idObject = src.getAsJsonObject("id");
+        if (idObject != null) {
+            populateAPIPropertyAsString(idObject, target, "providerName", "provider");
+            populateAPIPropertyAsString(idObject, target, "apiName", "name");
+            populateAPIPropertyAsString(idObject, target, "version", "version");
+        }
         populateAPIPropertyAsString(src, target, "status", "lifeCycleStatus");
 
         JsonElement typeElement = src.get("type");
@@ -191,25 +200,39 @@ public class APIInfoMappingUtil {
         target.add("operations", uriTemplates);
     }
 
-    private static void populateWSDLInfo(JsonObject src, JsonObject target) {
+    private static void populateWSDLInfo(String srcPath, JsonObject src, JsonObject target) {
         String type = CommonUtil.readElementAsString(src, "type");
+        String wsdlDirectory = srcPath + File.separator + Constants.WSDL_DIRECTORY;
+        File wsdlDirectoryFile = new File(wsdlDirectory);
         if (Constants.SOAP.equalsIgnoreCase(type)) {
-            JsonObject wsdlInfo = new JsonObject();
-            wsdlInfo.addProperty("type", "WSDL");
-            target.add("wsdlInfo", wsdlInfo);
+            if (wsdlDirectoryFile.exists() && wsdlDirectoryFile.isDirectory()) {
+                JsonObject wsdlInfo = new JsonObject();
+                JsonObject idObject = src.getAsJsonObject("id");
+                if (idObject != null) {
+                    String wsdlFileName = CommonUtil.readElementAsString(idObject, "apiName") + "-" +
+                            CommonUtil.readElementAsString(idObject, "version") + Constants.WSDL_EXTENSION;
+                    String wsdlArchiveName = CommonUtil.readElementAsString(idObject, "apiName") + "-" +
+                            CommonUtil.readElementAsString(idObject, "version") + Constants.ZIP_EXTENSION;
+                    File wsdlArchiveFile = new File(wsdlDirectoryFile, wsdlArchiveName);
+                    File wsdlFile = new File(wsdlDirectoryFile, wsdlFileName);
+                    if (wsdlArchiveFile.exists()) {
+                        wsdlInfo.addProperty("type", "ZIP");
+                    } else if (wsdlFile.exists()) {
+                        wsdlInfo.addProperty("type", "FILE");
+                    } else {
+                        log.warn("WSDL file/archive not found for API: " + CommonUtil.readElementAsString(idObject, "apiName") +
+                                " version: " + CommonUtil.readElementAsString(idObject, "version"));
+                    }
+                    target.add("wsdlInfo", wsdlInfo);
+                }
+            } else {
+                log.warn("WSDL directory not found for SOAP API: " + CommonUtil.readElementAsString(src, "name") +
+                        " version: " + CommonUtil.readElementAsString(src, "version"));
+            }
         }
 
-        //3.2.0 artifact does not have data for this property
-        JsonObject idObject = src.get("id").getAsJsonObject();
-        String provider = CommonUtil.readElementAsString(idObject, "providerName");
-        String name = CommonUtil.readElementAsString(idObject, "apiName");
-        String version = CommonUtil.readElementAsString(idObject, "version");
-
-        String wsdlName = provider + "--" + name + version + ".wsdl";
-
-        String wsdlURL = "/registry/resource/_system/governance/apimgt/applicationdata/provider/" +
-                provider + "/" + name + "/" + version + "/" + wsdlName;
-        target.addProperty("wsdlUrl", wsdlURL);
+        //no need to populate wsdlUrl in the import artifact. This will be updated in the registry artifact when the
+        //wsdl source is saved
     }
 
     private static void populateDependentAPIs(JsonObject src, JsonObject target) {
