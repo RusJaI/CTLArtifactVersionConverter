@@ -84,6 +84,8 @@ public class Constants {
     public static final String JAVA_IO_TMPDIR = "java.io.tmpdir";
     public static final int TEMP_FILENAME_LENGTH = 5;
     public static final String UPLOAD_FILE_NAME = "APIArchive.zip";
+    public static final String UPLOAD_API_JSON = "api.json";
+
     public static final char ZIP_FILE_SEPARATOR = '/';
     public static final char WIN_ZIP_FILE_SEPARATOR = '\\';
     public static final String PUBLISHED = "PUBLISHED";
@@ -94,5 +96,16 @@ public class Constants {
     public static final String ENDPOINT_CERT_TYPE = "ENDPOINT_CERTIFICATE";
     public static final String CLIENT_CERT_TYPE = "CLIENT_CERTIFICATE";
     public static final String DEFAULT_SECURITY = "default";
+    public static final String API_ASYNC_TRANSPORT_PROTOCOLS = "asyncTransportProtocols";
+    public static final String API_WSDL_INFO = "wsdlInfo";
+    public static final String API_MEDIATION_POLICIES = "mediationPolicies";
+    public static final String API_API_POLICIES = "apiPolicies";
+    public static final String API_PRODUCT_STATE = "state";
+    public static final String API_PRODUCT_APIS = "apis";
+    public static final String API_PRODUCT_API_TYPE = "apiType";
+    public static final String API_REVISION_ID = "revisionId";
+    public static final String API_PRODUCT_REVISIONED_ID = "revisionedApiProductId";
+    public static final String API_BUSINESS_OWNER = "businessOwner";
+    public static final String API_TECHNICAL_OWNER = "technicalOwner";
 
 }
