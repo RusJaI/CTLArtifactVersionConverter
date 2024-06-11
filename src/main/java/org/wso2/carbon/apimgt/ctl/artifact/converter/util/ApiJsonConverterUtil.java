@@ -1,60 +1,29 @@
 package org.wso2.carbon.apimgt.ctl.artifact.converter.util;
 
-import com.google.gson.*;
-import org.wso2.carbon.apimgt.ctl.artifact.converter.model.APIJson;
-import org.wso2.carbon.apimgt.ctl.artifact.converter.model.v32.V32APIJson;
-import org.wso2.carbon.apimgt.ctl.artifact.converter.model.v42.V42APIJson;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 
+import java.util.Date;
+import java.util.Map;
 import java.util.Set;
 
 public class ApiJsonConverterUtil {
 
-    //initialize gson to serialize with null values
+    /**
+     * Initialize gson to serialize with null values
+     */
     private static final Gson gson = new GsonBuilder().serializeNulls().create();
-    public static JsonObject convertFromV32To42(V32APIJson v32APIJson, JsonObject paramsObject,
-                                                boolean isApiProduct) {
-        //For APIs
-        V42APIJson v42APIJson = new V42APIJson();
-        v42APIJson.setName(v32APIJson.getName());
-        v42APIJson.setDescription(v32APIJson.getDescription());
-        v42APIJson.setContext(v32APIJson.getContext());
-        v42APIJson.setVersion(v32APIJson.getVersion() == null ? "1.0" : v32APIJson.getVersion());
-        v42APIJson.setProvider(v32APIJson.getProvider());
-        v42APIJson.setLifeCycleStatus(v32APIJson.getLifeCycleStatus());
 
-        //added wsdl info at the end
+    public static JsonObject convertFromV32To42(Map apiMap, JsonObject paramsObject, boolean isApiProduct) {
 
-        v42APIJson.setResponseCachingEnabled(v32APIJson.isResponseCachingEnabled());
-        v42APIJson.setCacheTimeout(v32APIJson.getCacheTimeout());
-        v42APIJson.setHasThumbnail(v32APIJson.isHasThumbnail());
-        v42APIJson.setDefaultVersion(v32APIJson.isDefaultVersion());
-
-        // isRevision and revisionId added to the end
-        v42APIJson.setEnableSchemaValidation(v32APIJson.isEnableSchemaValidation());
-
-        // enableSubscriberVerification added to the end
-
-        //type added to the end
-        // audience added to the end
-
-        v42APIJson.setTransport(v32APIJson.getTransport());
-        v42APIJson.setTags(v32APIJson.getTags());
-        v42APIJson.setPolicies(v32APIJson.getPolicies());
-        v42APIJson.setApiThrottlingPolicy(v32APIJson.getApiThrottlingPolicy());
-        v42APIJson.setAuthorizationHeader(v32APIJson.getAuthorizationHeader());
-        v42APIJson.setSecurityScheme(v32APIJson.getSecurityScheme());
-        v42APIJson.setMaxTps(v32APIJson.getMaxTps());
-        v42APIJson.setVisibility(v32APIJson.getVisibility());
-        v42APIJson.setVisibleRoles(v32APIJson.getVisibleRoles());
-        v42APIJson.setVisibleTenants(v32APIJson.getVisibleTenants());
-
-        v42APIJson.setSubscriptionAvailability(v32APIJson.getSubscriptionAvailability());
-        v42APIJson.setSubscriptionAvailableTenants(v32APIJson.getSubscriptionAvailableTenants());
-
-
-        //set additionalPropertiesMap which is new in v42
-        JsonObject srcAdditionalPropertyJson = v32APIJson.getAdditionalProperties() == null ? null :
-                gson.toJsonTree(v32APIJson.getAdditionalProperties()).getAsJsonObject();
+        /**
+         * Map additionalProperties object to array and Add additionalPropertiesMap which is new in v42
+         */
+        JsonObject srcAdditionalPropertyJson = apiMap.get("additionalProperties") == null ? null :
+                gson.toJsonTree(apiMap.get("additionalProperties")).getAsJsonObject();
         JsonArray additionalPropertyJsonArray = new JsonArray();
         JsonObject additionalPropertiesMap = new JsonObject();
         if (srcAdditionalPropertyJson != null && !srcAdditionalPropertyJson.isEmpty()) {
@@ -75,12 +44,13 @@ public class ApiJsonConverterUtil {
             }
         }
 
-        v42APIJson.setMonetization(v32APIJson.getMonetization() == null ? null :
-                gson.toJsonTree(v32APIJson.getMonetization()).getAsJsonObject());
-        v42APIJson.setAccessControl(v32APIJson.getAccessControl());
-        v42APIJson.setAccessControlRoles(v32APIJson.getAccessControlRoles());
+        apiMap.put("additionalProperties", additionalPropertyJsonArray);
+        apiMap.put("additionalPropertiesMap", additionalPropertiesMap);
 
-        JsonObject businessOwnerInfoJson = gson.toJsonTree(v32APIJson.getBusinessInformation()).getAsJsonObject();
+        /**
+         * Map Business information
+         */
+        JsonObject businessOwnerInfoJson = gson.toJsonTree(apiMap.get("businessInformation")).getAsJsonObject();
         JsonElement businessOwner = businessOwnerInfoJson.get(Constants.API_BUSINESS_OWNER);
         if (!businessOwner.isJsonNull()) {
             businessOwnerInfoJson.addProperty(Constants.API_BUSINESS_OWNER,
@@ -93,132 +63,88 @@ public class ApiJsonConverterUtil {
                     technicalOwner.getAsString().length() > 120 ? technicalOwner.getAsString().substring(0, 120) :
                             technicalOwner.getAsString());
         }
-        v42APIJson.setBusinessInformation(businessOwnerInfoJson);
+        apiMap.put("businessInformation", businessOwnerInfoJson);
 
-        v42APIJson.setCorsConfiguration(gson.toJsonTree(v32APIJson.getCorsConfiguration()).getAsJsonObject());
-
-        // added websubSubscriptionConfiguration at the end
-
-        v42APIJson.setWorkflowStatus(v32APIJson.getWorkflowStatus());
-        v42APIJson.setCreatedTime(v32APIJson.getCreatedTime());
-        v42APIJson.setLastUpdatedTime(v32APIJson.getLastUpdatedTime());
-        v42APIJson.setEndpointConfig(v32APIJson.getEndpointConfig() == null ? null :
-                gson.toJsonTree(v32APIJson.getEndpointConfig()).getAsJsonObject());
-        v42APIJson.setEndpointImplementationType(v32APIJson.getEndpointImplementationType());
-        v42APIJson.setScopes(v32APIJson.getScopes());
-
-        /**
-         * map mediation policies to API Level polices
-         */
-        JsonArray mediationPolicyArray = v32APIJson.getMediationPolicies() == null ? null :
-                gson.toJsonTree(v32APIJson.getMediationPolicies()).getAsJsonArray();
-        if (mediationPolicyArray != null && !mediationPolicyArray.isEmpty()) {
-            JsonObject apiPolicyObject = new JsonObject();
-            for (JsonElement mediationPolicyElement : mediationPolicyArray) {
-                JsonObject mappedObject = new JsonObject();
-
-                //required field in 3.2.0
-                mappedObject.add("policyName", mediationPolicyElement.getAsJsonObject().get("name"));
-
-                if (mediationPolicyElement.getAsJsonObject().keySet().contains("id")) {
-                    mappedObject.add("policyId", mediationPolicyElement.getAsJsonObject().get("id"));
-                } else {
-                    mappedObject.add("policyId",null);
-                }
-                mappedObject.addProperty("policyVersion", "v1");
-                mappedObject.add("parameters", new JsonObject());
-
-                JsonArray policyArray = new JsonArray();
-                policyArray.add(mappedObject);
-                if ("in".equals(mediationPolicyElement.getAsJsonObject().get("type").getAsString())) {
-                    apiPolicyObject.add("request", policyArray);
-                } else if ("out".equals(mediationPolicyElement.getAsJsonObject().get("type").getAsString())) {
-                    apiPolicyObject.add("response", policyArray);
-                } else if ("fault".equals(mediationPolicyElement.getAsJsonObject().get("type").getAsString())) {
-                    apiPolicyObject.add("fault", policyArray);
-                }
-            }
-            v42APIJson.setApiPolicies(apiPolicyObject);
-        }
-
-        v42APIJson.setThreatProtectionPolicies(v32APIJson.getThreatProtectionPolicies() == null ? null :
-                gson.toJsonTree(v32APIJson.getThreatProtectionPolicies())
-                .getAsJsonObject());
-        v42APIJson.setCategories(v32APIJson.getCategories());
 
         /**
          * add default values for newly introduced fields in 4.2.0
          */
 
         // common for apis and api products
-        v42APIJson.setRevision(false);
-        v42APIJson.setRevisionId(1);
-        v42APIJson.setEnableSubscriberVerification(false);
-        v42APIJson.setAudience("PUBLIC");
-        v42APIJson.setGatewayVendor("wso2");
-        v42APIJson.setGatewayType("wso2/synapse");
+        apiMap.put("isRevision", false);
+        apiMap.put("revisionId", 1);
+        apiMap.put("gatewayVendor", "wso2");
+        apiMap.put("lastUpdatedTimestamp", new Date().getTime());
+        apiMap.put("workflowStatus", null);
 
-        /**not added default values for
-         * 1. websubSubscriptionConfiguration
-         * 2. serviceInfo
-         * 3. advertiseInfo
-         */
+        if (isApiProduct) {
+            apiMap.put(Constants.API_DATA_VERSION, "1.0");
+            apiMap.put("isDefaultVersion", false);
+            apiMap.put("revisionedApiProductId", null);
 
-        if (isApiProduct) { //only for API products
-            v42APIJson.setState(v32APIJson.getState());
-            v42APIJson.setApiType(v32APIJson.getApiType());
             /**
              * API products doesn't have mediation policy details in 3.2.0. Hence adding empty values
              */
-            JsonArray apiArray = gson.toJsonTree(v32APIJson.getApis()).getAsJsonArray();
+            JsonArray apiArray = gson.toJsonTree(apiMap.get("apis")).getAsJsonArray();
             for (JsonElement apiElement : apiArray) {
                 JsonArray apiOperations = getUpdatedOperations(apiElement.getAsJsonObject()
                         .getAsJsonArray("operations"));
                 apiElement.getAsJsonObject().add("operations", apiOperations);
             }
-            v42APIJson.setApis(apiArray);
-
-        } else { // only for APIs
-            v42APIJson.setType(v32APIJson.getType());
-            if (Constants.SOAP.equals(v42APIJson.getType())) {
-                v42APIJson.setWsdlInfo(gson.toJsonTree(v32APIJson.getWsdlInfo()).getAsJsonObject());
-            }
+            apiMap.put("apis", apiArray);
 
             /**
-             * Add empty values for the newly introduced fields
+             * Remove the fields which are not in 4.2.0
              */
-            JsonArray operationsArray = gson.toJsonTree(v32APIJson.getOperations()).getAsJsonArray();
-            v42APIJson.setOperations(getUpdatedOperations(operationsArray));
+            apiMap.remove("gatewayEnvironments");
+
+        } else {
+            apiMap.put("enableSubscriberVerification", false);
+            apiMap.put("audience", "PUBLIC");
+            apiMap.put("gatewayType","wso2/synapse");
+            apiMap.put("revisionedApiId", null);
+
+            /**
+             * Map mediation policies to API Level polices
+             */
+            JsonObject apiPolicyMappedObject =
+                    getApiPolicyMapping(gson.toJsonTree(apiMap.get("mediationPolicies")).getAsJsonArray());
+            apiMap.put("apiPolicy", apiPolicyMappedObject);
+
+            /**
+             * Add empty values for the newly introduced fields in Operations object
+             */
+            JsonArray operationsArray = gson.toJsonTree(apiMap.get(Constants.OPERATIONS)).getAsJsonArray();
+            apiMap.put(Constants.OPERATIONS, getUpdatedOperations(operationsArray));
 
             //new to 4.2.0
-            v42APIJson.setAsyncTransportProtocols(new String[]{"http", "https"});
+            apiMap.put("asyncTransportProtocols", new String[]{"http", "https"});
+
+            /**
+             * Remove the fields which are not in 4.2.0
+             */
+            apiMap.remove("testKey");
+            apiMap.remove("destinationStatsEnabled");
+            apiMap.remove("enableStore");
+            apiMap.remove("endpointSecurity");
+            apiMap.remove("gatewayEnvironments");
+            apiMap.remove("deploymentEnvironments");
+            apiMap.remove("labels");
         }
 
-        //convert model to JsonObject
-        JsonObject targetJsonObject = convertModelToJsonObject(v42APIJson);
-
-        //remove additional fields based on API or API Product
         /**
-         * Remove the unrelated fields from an API
+         * Convert model to JsonObject
          */
-        if (isApiProduct) {
-            targetJsonObject.remove(Constants.API_ASYNC_TRANSPORT_PROTOCOLS);
-            targetJsonObject.remove(Constants.API_WSDL_INFO);
-            targetJsonObject.remove(Constants.API_MEDIATION_POLICIES);
-            targetJsonObject.remove(Constants.API_API_POLICIES);
-        } else { // an API
-            targetJsonObject.remove(Constants.API_PRODUCT_STATE);
-            targetJsonObject.remove(Constants.API_PRODUCT_API_TYPE);
-            targetJsonObject.remove(Constants.API_PRODUCT_APIS);
-            targetJsonObject.remove(Constants.API_PRODUCT_REVISIONED_ID);
-        }
+        JsonObject targetJsonObject = convertModelToJsonObject(apiMap);
 
-        //update values received from paramJson
+        /**
+         * Update values received from paramJson
+         */
         targetJsonObject = setFromParamsJson(paramsObject, targetJsonObject);
         return targetJsonObject;
     }
 
-    private static JsonObject convertModelToJsonObject(APIJson targetModel) {
+    private static JsonObject convertModelToJsonObject(Map targetModel) {
         JsonObject model = gson.toJsonTree(targetModel, targetModel.getClass()).getAsJsonObject();
         return model;
     }
@@ -253,6 +179,42 @@ public class ApiJsonConverterUtil {
                 operation.getAsJsonObject().add("operationPolicies", operationPolicies);
             }
             return operationsArray;
+        }
+        return null;
+    }
+
+    /**
+     * Map mediation policies to API Level polices
+     */
+    private static JsonObject getApiPolicyMapping(JsonArray mediationPolicyArray) {
+
+        if (mediationPolicyArray != null) {
+            JsonObject apiPolicyObject = new JsonObject();
+            for (JsonElement mediationPolicyElement : mediationPolicyArray) {
+                JsonObject mappedObject = new JsonObject();
+
+                //required field in 3.2.0
+                mappedObject.add("policyName", mediationPolicyElement.getAsJsonObject().get("name"));
+
+                if (mediationPolicyElement.getAsJsonObject().keySet().contains("id")) {
+                    mappedObject.add("policyId", mediationPolicyElement.getAsJsonObject().get("id"));
+                } else {
+                    mappedObject.add("policyId",null);
+                }
+                mappedObject.addProperty("policyVersion", "v1");
+                mappedObject.add("parameters", new JsonObject());
+
+                JsonArray policyArray = new JsonArray();
+                policyArray.add(mappedObject);
+                if ("in".equals(mediationPolicyElement.getAsJsonObject().get("type").getAsString())) {
+                    apiPolicyObject.add("request", policyArray);
+                } else if ("out".equals(mediationPolicyElement.getAsJsonObject().get("type").getAsString())) {
+                    apiPolicyObject.add("response", policyArray);
+                } else if ("fault".equals(mediationPolicyElement.getAsJsonObject().get("type").getAsString())) {
+                    apiPolicyObject.add("fault", policyArray);
+                }
+            }
+            return apiPolicyObject;
         }
         return null;
     }

@@ -99,7 +99,6 @@ public class ArtifactConvertApiServiceImpl implements ArtifactConvertApiService 
                     targetArtifactPath, paramsJson, Constants.API_PRIDUCT_TYPE.equals(type));
             apiJsonConverter.convert();
 
-
             return Response.ok(targetAPIArtifactFile).header(RestApiConstants.HEADER_CONTENT_DISPOSITION,
                     "attachment; filename=\"" + targetAPIArtifactFile.getName() + "\"").build();
         } catch (CTLArtifactConversionException e) {
