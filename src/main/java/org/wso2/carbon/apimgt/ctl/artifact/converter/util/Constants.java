@@ -101,8 +101,39 @@ public class Constants {
      * API JSON related properties
      */
 
-    public static final String API_BUSINESS_OWNER = "businessOwner";
-    public static final String API_TECHNICAL_OWNER = "technicalOwner";
+    public static final String AJ_API_BUSINESS_OWNER = "businessOwner";
+    public static final String AJ_API_TECHNICAL_OWNER = "technicalOwner";
+    public static final String AJ_OPERATIONS = "operations";
+    public static final String AJ_ADDITIONAL_PROPERTIES = "additionalProperties";
+    public static final String AJ_ADDITIONAL_PROPERTIES_MAP = "additionalPropertiesMap";
+    public static final String AJ_BUSINESS_INFORMATION = "businessInformation";
+    public static final String AJ_IS_REVISION = "isRevision";
+    public static final String AJ_REVISION_ID = "revisionId";
+    public static final String AJ_GATEWAY_VENDOR = "gatewayVendor";
+    public static final String AJ_LAST_UPDATED_TIMESTAMP = "lastUpdatedTimestamp";
+    public static final String AJ_WORKFLOW_STATUS = "workflowStatus";
+    public static final String AJ_IS_DEFAULT_VERSION = "isDefaultVersion";
+    public static final String AJ_REVISIONED_API_PRODUCT_ID = "revisionedApiProductId";
+    public static final String AJ_REVISIONED_API_ID = "revisionedApiId";
+    public static final String AJ_APIS = "apis";
+    public static final String AJ_GATEWAY_ENVIRONMENTS = "gatewayEnvironments";
+    public static final String AJ_GATEWAY_TYPE = "gatewayType";
+    public static final String AJ_ENABLE_SUBSCRIBER_VERIFICATION = "enableSubscriberVerification";
+    public static final String AJ_AUDIENCE = "audience";
+    public static final String AJ_ASYNC_TRANSPORT_PROTOCOLS = "asyncTransportProtocols";
+    public static final String AJ_API_POLICIES = "apiPolicies";
+    public static final String AJ_TEST_KEY = "testKey";
+    public static final String AJ_DESTINATION_STATS_ENABLED = "destinationStatsEnabled";
+    public static final String AJ_ENABLE_STORE = "enableStore";
+    public static final String AJ_ENDPOINT_SECURITY = "endpointSecurity";
+    public static final String AJ_DEPLOYMENT_ENVIRONMENTS = "deploymentEnvironments";
+    public static final String AJ_LABELS = "labels";
+    public static final String AJ_POLICY_TYPE_REQUEST = "request";
+    public static final String AJ_POLICY_TYPE_RESPONSE = "response";
+    public static final String AJ_POLICY_TYPE_FAULT = "fault";
+    public static final String AJ_POLICY_TYPE = "type";
+    public static final String AJ_MEDIATION_POLICIES = "mediationPolicies";
+    public static final String AJ_OPERATION_POLICIES = "operationPolicies";
 
-    public static final String OPERATIONS = "operations";
+
 }

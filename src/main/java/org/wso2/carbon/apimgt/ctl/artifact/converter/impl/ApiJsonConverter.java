@@ -48,6 +48,8 @@ public class ApiJsonConverter {
             } else {
                 throw new CTLArtifactConversionException("Unsupported target version");
             }
+        } else {
+            throw new CTLArtifactConversionException("Unsupported source version");
         }
         // TODO : Other version conversions
 
