@@ -5,8 +5,14 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import org.apache.commons.lang3.StringUtils;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -17,7 +23,124 @@ public class ApiJsonConverterUtil {
      */
     private static final Gson gson = new GsonBuilder().serializeNulls().create();
 
-    public static JsonObject convertFromV32To42(Map apiMap, JsonObject paramsObject, boolean isApiProduct) {
+    public static JsonObject convertFromV32To42(Map apiMap, JsonObject paramsObject, boolean isApiProduct)
+            throws ParseException {
+
+        Map <String, Object> dataMap = new HashMap<String, Object>();
+
+        JsonObject artifactObject = new JsonObject();
+        artifactObject.addProperty("type", isApiProduct? "api_product" : "api");
+        artifactObject.addProperty("version", "v4.2.0");
+        /**
+         * Map contents of Id object
+         */
+        JsonObject idObject = apiMap.get("id") == null ? null : gson.toJsonTree(apiMap.get("id")).getAsJsonObject();
+
+        if (idObject != null) {
+            dataMap.put("id", apiMap.get("uuid") == null ? null : apiMap.get("uuid"));
+            dataMap.put("name", idObject.has("apiName") ? idObject.get("apiName")
+                    : null);
+            dataMap.put("version", idObject.has("version") ? idObject.get("version")
+                    : null);
+            dataMap.put("provider", idObject.has("providerName") ? idObject.get("providerName")
+                    : null);
+        }
+
+        dataMap.put("context", apiMap.get("context"));
+        dataMap.put("tags", apiMap.get("tags"));
+
+        String dateTimeString = apiMap.get("lastUpdated") == null ? null : apiMap.get("lastUpdated").toString();
+        SimpleDateFormat formatter = new SimpleDateFormat("MMM dd, yyyy, HH:mm:ss aa");
+        SimpleDateFormat newFormatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.s");
+        Date latestUpdatedDate = formatter.parse(dateTimeString);
+        dataMap.put("lastUpdatedTimestamp", latestUpdatedDate.getTime());
+        dataMap.put("lastUpdatedTime", newFormatter.format(latestUpdatedDate));
+
+        /**
+         * Map availableTiers
+         */
+        JsonArray tiersArray = apiMap.get("availableTiers") == null ? null :
+                gson.toJsonTree(apiMap.get("availableTiers")).getAsJsonArray();
+        List<String> policiesList = new ArrayList<String>();
+        if (tiersArray != null) {
+            for (JsonElement tierElement : tiersArray) {
+                JsonObject tierObject = tierElement.getAsJsonObject();
+                if (tierObject.has("name")) {
+                    policiesList.add(tierObject.get("name").getAsString());
+                }
+            }
+        }
+        dataMap.put("policies", policiesList);
+        dataMap.put("authorizationHeader", "Authorization");
+
+        /**
+         * Map business Info
+         */
+        JsonObject businessInfoJson = new JsonObject();
+        if (apiMap.get(Constants.AJ_API_BUSINESS_OWNER) != null) {
+            businessInfoJson.addProperty(Constants.AJ_API_BUSINESS_OWNER,
+                    apiMap.get(Constants.AJ_API_BUSINESS_OWNER).toString());
+        }
+        if (apiMap.get(Constants.AJ_API_BUSINESS_OWNER_EMAIL) != null) {
+            businessInfoJson.addProperty(Constants.AJ_API_BUSINESS_OWNER_EMAIL,
+                    apiMap.get(Constants.AJ_API_BUSINESS_OWNER_EMAIL).toString());
+        }
+        if (apiMap.get(Constants.AJ_API_TECHNICAL_OWNER) != null) {
+            businessInfoJson.addProperty(Constants.AJ_API_TECHNICAL_OWNER,
+                    apiMap.get(Constants.AJ_API_TECHNICAL_OWNER).toString());
+        }
+        if (apiMap.get(Constants.AJ_API_TECHNICAL_OWNER_EMAIL) != null) {
+            businessInfoJson.addProperty(Constants.AJ_API_TECHNICAL_OWNER_EMAIL,
+                    apiMap.get(Constants.AJ_API_TECHNICAL_OWNER_EMAIL).toString());
+        }
+        dataMap.put(Constants.AJ_BUSINESS_INFORMATION, businessInfoJson);
+        dataMap.put("visibility", apiMap.get("visibility").toString().toUpperCase());
+        dataMap.put("visibleRoles", new JsonArray());
+        dataMap.put("visibleTenants", new JsonArray());
+        if (apiMap.get("transports") != null) {
+            dataMap.put("transport", apiMap.get("transports").toString().split(","));
+        }
+        dataMap.put("subscriptionAvailability", apiMap.get("subscriptionAvailability"));
+        dataMap.put("subscriptionAvailableTenants", new JsonArray());
+        dataMap.put("corsConfiguration", apiMap.get("corsConfiguration"));
+
+        if ((apiMap.get("responseCache") != null) &&
+                (apiMap.get("responseCache").toString().equalsIgnoreCase("Enabled"))) {
+            dataMap.put("responseCachingEnabled", true);
+        } else {
+            dataMap.put("responseCachingEnabled", false);
+        }
+
+        if (apiMap.get("cacheTimeout") != null) {
+            dataMap.put("cacheTimeout", Integer.parseInt(apiMap.get("cacheTimeout").toString()));
+        }
+
+        dataMap.put("hasThumbnail", false);
+
+        if (apiMap.get("scopes") == null) {
+            dataMap.put("scopes", new JsonArray());
+        } else {
+            dataMap.put("scopes", apiMap.get("scopes"));
+        }
+
+        if (apiMap.get(Constants.AJ_IS_DEFAULT_VERSION) == null) {
+            dataMap.put(Constants.AJ_IS_DEFAULT_VERSION, false);
+        } else {
+            dataMap.put(Constants.AJ_IS_DEFAULT_VERSION, apiMap.get(Constants.AJ_IS_DEFAULT_VERSION));
+        }
+
+        dataMap.put(Constants.AJ_IS_REVISION, false);
+        dataMap.put(Constants.AJ_REVISION_ID, 0);
+
+        if (apiMap.get(Constants.AJ_kEY_MANAGERS) == null) {
+            dataMap.put(Constants.AJ_kEY_MANAGERS, new JsonArray());
+        } else {
+            dataMap.put(Constants.AJ_kEY_MANAGERS, apiMap.get(Constants.AJ_kEY_MANAGERS));
+        }
+
+        if (apiMap.get("createdTime") != null) {
+            dataMap.put("createdTime", apiMap.get("createdTime"));
+        }
 
         /**
          * Map additionalProperties object to array and Add additionalPropertiesMap which is new in v42
@@ -44,109 +167,138 @@ public class ApiJsonConverterUtil {
             }
         }
 
-        apiMap.put(Constants.AJ_ADDITIONAL_PROPERTIES, additionalPropertyJsonArray);
-        apiMap.put(Constants.AJ_ADDITIONAL_PROPERTIES_MAP, additionalPropertiesMap);
+        dataMap.put(Constants.AJ_ADDITIONAL_PROPERTIES, additionalPropertyJsonArray);
+        dataMap.put(Constants.AJ_ADDITIONAL_PROPERTIES_MAP, additionalPropertiesMap);
 
-        /**
-         * Map Business information
-         */
-        JsonObject businessOwnerInfoJson = gson.toJsonTree(apiMap.get(Constants.AJ_BUSINESS_INFORMATION)).getAsJsonObject();
-        JsonElement businessOwner = businessOwnerInfoJson.get(Constants.AJ_API_BUSINESS_OWNER);
-        if (!businessOwner.isJsonNull()) {
-            businessOwnerInfoJson.addProperty(Constants.AJ_API_BUSINESS_OWNER,
-                    businessOwner.getAsString().length() > 120 ? businessOwner.getAsString().substring(0, 120) :
-                            businessOwner.getAsString());
+        JsonObject monetizationObject = new JsonObject();
+        if (apiMap.get(Constants.AJ_IS_MONETIZATION_ENABLED) == null) {
+            monetizationObject.addProperty(Constants.AJ_IS_MONETIZATION_ENABLED, false);
+        } else {
+            monetizationObject.addProperty(Constants.AJ_IS_MONETIZATION_ENABLED,
+                    apiMap.get(Constants.AJ_IS_MONETIZATION_ENABLED).toString());
         }
-        JsonElement technicalOwner = businessOwnerInfoJson.get(Constants.AJ_API_TECHNICAL_OWNER);
-        if (!technicalOwner.isJsonNull()) {
-            businessOwnerInfoJson.addProperty(Constants.AJ_API_TECHNICAL_OWNER,
-                    technicalOwner.getAsString().length() > 120 ? technicalOwner.getAsString().substring(0, 120) :
-                            technicalOwner.getAsString());
+        if (apiMap.get(Constants.AJ_MONETIZATION_PROPERTIES) == null) {
+            monetizationObject.add(Constants.AJ_MONETIZATION_PROPERTIES, new JsonObject());
+        } else  {
+            monetizationObject.add(Constants.AJ_MONETIZATION_PROPERTIES,
+                    convertMapToJsonObject((Map) apiMap.get(Constants.AJ_MONETIZATION_PROPERTIES)));
         }
-        apiMap.put(Constants.AJ_BUSINESS_INFORMATION, businessOwnerInfoJson);
+        dataMap.put("monetization", monetizationObject);
 
+        String apiSecurityString = apiMap.get("apiSecurity") == null ? null : apiMap.get("apiSecurity").toString();
+        if (StringUtils.isEmpty(apiSecurityString)) {
+            dataMap.put("securityScheme", new JsonArray());
+        } else {
+            dataMap.put("securityScheme", apiSecurityString.split(","));
+        }
 
-        /**
-         * add default values for newly introduced fields in 4.2.0
-         */
+        if (apiMap.get(Constants.AJ_ENABLE_SCHEMA_VALIDATION) == null) {
+            dataMap.put(Constants.AJ_ENABLE_SCHEMA_VALIDATION, false);
+        } else {
+            dataMap.put(Constants.AJ_ENABLE_SCHEMA_VALIDATION,
+                    apiMap.get(Constants.AJ_ENABLE_SCHEMA_VALIDATION));
+        }
 
-        // common for apis and api products
-        apiMap.put(Constants.AJ_IS_REVISION, false);
-        apiMap.put(Constants.AJ_REVISION_ID, 1);
-        apiMap.put(Constants.AJ_GATEWAY_VENDOR, Constants.GATEWAY_VENDOR_WSO2);
-        apiMap.put(Constants.AJ_LAST_UPDATED_TIMESTAMP, new Date().getTime());
-        apiMap.put(Constants.AJ_WORKFLOW_STATUS, null);
+        dataMap.put("categories", apiMap.get("apiCategories"));
+
+        if (apiMap.get(Constants.AJ_ACCESS_CONTROL) != null) {
+            dataMap.put(Constants.AJ_ACCESS_CONTROL, apiMap.get(Constants.AJ_ACCESS_CONTROL));
+        }
+        dataMap.put("accessControlRoles", new JsonArray());
+        dataMap.put(Constants.AJ_GATEWAY_VENDOR, Constants.GATEWAY_VENDOR_WSO2);
+
+/***------------------------------------------------------------------------------------------------------------------*/
 
         if (isApiProduct) {
-            apiMap.put(Constants.API_DATA_VERSION, "1.0");
-            apiMap.put(Constants.AJ_IS_DEFAULT_VERSION, false);
-            apiMap.put(Constants.AJ_REVISIONED_API_PRODUCT_ID, null);
+            dataMap.put("state", apiMap.get("status"));
 
-            /**
-             * API products doesn't have mediation policy details in 3.2.0. Hence adding empty values
-             */
-            JsonArray apiArray = gson.toJsonTree(apiMap.get(Constants.AJ_APIS)).getAsJsonArray();
-            for (JsonElement apiElement : apiArray) {
-                JsonArray apiOperations = getUpdatedOperations(apiElement.getAsJsonObject()
-                        .getAsJsonArray(Constants.AJ_OPERATIONS));
-                apiElement.getAsJsonObject().add(Constants.AJ_OPERATIONS, apiOperations);
-            }
-            apiMap.put(Constants.AJ_APIS, apiArray);
-
-            /**
-             * Remove the fields which are not in 4.2.0
-             */
-            apiMap.remove(Constants.AJ_GATEWAY_ENVIRONMENTS);
 
         } else {
-            apiMap.put(Constants.AJ_ENABLE_SUBSCRIBER_VERIFICATION, false);
-            apiMap.put(Constants.AJ_AUDIENCE, "PUBLIC");
-            apiMap.put(Constants.AJ_GATEWAY_TYPE, Constants.GATEWAY_TYPE_WSO2_SYNAPSE);
-            apiMap.put(Constants.AJ_REVISIONED_API_ID, null);
+            dataMap.put("enableSubscriberVerification", false);
+            dataMap.put("type", apiMap.get("type"));
+            dataMap.put("lifeCycleStatus", apiMap.get("status"));
 
             /**
-             * Map mediation policies to API Level polices
+             * Map API Policies
              */
-            JsonObject apiPolicyMappedObject = getApiPolicyMapping(gson.toJsonTree(apiMap
-                    .get(Constants.AJ_MEDIATION_POLICIES)).getAsJsonArray());
-            apiMap.put(Constants.AJ_API_POLICIES, apiPolicyMappedObject);
+            JsonObject apiPoliciesObject = new JsonObject();
+            if (apiMap.get("inSequence") != null) {
+                JsonObject inObject = new JsonObject();
+                inObject.addProperty(Constants.AJ_POLICY_NAME, apiMap.get("inSequence").toString());
+                inObject.addProperty(Constants.AJ_POLICY_VERSION, "v1");
+                inObject.add(Constants.AJ_POLICY_ID, null);
+                inObject.add(Constants.AJ_POLICY_PARAMS, new JsonObject());
+                JsonArray policyArray = new JsonArray();
+                policyArray.add(inObject);
+                apiPoliciesObject.add("request", policyArray);
+            }
+
+            if (apiMap.get("outSequence") != null) {
+                JsonObject outObject = new JsonObject();
+                outObject.addProperty(Constants.AJ_POLICY_NAME, apiMap.get("outSequence").toString());
+                outObject.addProperty(Constants.AJ_POLICY_VERSION, "v1");
+                outObject.add(Constants.AJ_POLICY_ID, null);
+                outObject.add(Constants.AJ_POLICY_PARAMS, new JsonObject());
+                JsonArray policyArray = new JsonArray();
+                policyArray.add(outObject);
+                apiPoliciesObject.add("response", policyArray);
+            }
+
+            if (apiMap.get("faultSequence") != null) {
+                JsonObject faultObject = new JsonObject();
+                faultObject.addProperty(Constants.AJ_POLICY_NAME, apiMap.get("faultSequence").toString());
+                faultObject.addProperty(Constants.AJ_POLICY_VERSION, "v1");
+                faultObject.add(Constants.AJ_POLICY_ID, null);
+                faultObject.add(Constants.AJ_POLICY_PARAMS, new JsonObject());
+                JsonArray policyArray = new JsonArray();
+                policyArray.add(faultObject);
+                apiPoliciesObject.add("fault", policyArray);
+            }
+            dataMap.put("apiPolicies", apiPoliciesObject);
 
             /**
-             * Add empty values for the newly introduced fields in Operations object
+             * Map endpointConfig
              */
-            JsonArray operationsArray = gson.toJsonTree(apiMap.get(Constants.AJ_OPERATIONS)).getAsJsonArray();
-            apiMap.put(Constants.AJ_OPERATIONS, getUpdatedOperations(operationsArray));
+            JsonObject endpointConfigJson = apiMap.get("endpointConfig") == null ? null :
+                    gson.fromJson(apiMap.get("endpointConfig").toString(), JsonObject.class);
+            dataMap.put("endpointConfig", endpointConfigJson);
 
-            //new to 4.2.0
-            apiMap.put(Constants.AJ_ASYNC_TRANSPORT_PROTOCOLS, new String[]{"http", "https"});
-            //replace mediation policy object with an empty array
-            apiMap.put(Constants.AJ_MEDIATION_POLICIES, new JsonArray());
+            if (apiMap.get("implementation") != null) {
+                dataMap.put("endpointImplementationType", apiMap.get("implementation"));
+            }
+            dataMap.put("mediationPolicies", new JsonArray());
 
-            /**
-             * Remove the fields which are not in 4.2.0
-             */
-            apiMap.remove(Constants.AJ_TEST_KEY);
-            apiMap.remove(Constants.AJ_DESTINATION_STATS_ENABLED);
-            apiMap.remove(Constants.AJ_ENABLE_STORE);
-            apiMap.remove(Constants.AJ_ENDPOINT_SECURITY);
-            apiMap.remove(Constants.AJ_GATEWAY_ENVIRONMENTS);
-            apiMap.remove(Constants.AJ_DEPLOYMENT_ENVIRONMENTS);
-            apiMap.remove(Constants.AJ_LABELS);
+            JsonObject websubObject = new JsonObject();
+            websubObject.addProperty("enable", false);
+            websubObject.addProperty("secret", "");
+            websubObject.addProperty("signingAlgorithm", "SHA1");
+            websubObject.addProperty("signatureHeader", "x-hub-signature");
+            dataMap.put("websubSubscriptionConfiguration", websubObject);
+
+            JsonObject advertiseInfoObject = new JsonObject();
+            advertiseInfoObject.addProperty("advertised", false);
+            advertiseInfoObject.add("apiOwner", idObject == null ? null : idObject.get("providerName"));
+            advertiseInfoObject.addProperty("vendor", "WSO2");
+            dataMap.put("advertiseInfo", advertiseInfoObject);
+            dataMap.put(Constants.AJ_GATEWAY_TYPE, Constants.GATEWAY_TYPE_WSO2_SYNAPSE);
+            dataMap.put(Constants.AJ_ASYNC_TRANSPORT_PROTOCOLS, new String[]{"http", "https"});
+            dataMap.put("organizationId", "carbon.super");
         }
 
         /**
          * Convert model to JsonObject
          */
-        JsonObject targetJsonObject = convertModelToJsonObject(apiMap);
+        JsonObject dataJsonObject = convertMapToJsonObject(dataMap);
 
         /**
          * Update values received from paramJson
          */
-        targetJsonObject = setFromParamsJson(paramsObject, targetJsonObject);
-        return targetJsonObject;
+        dataJsonObject = setFromParamsJson(paramsObject, dataJsonObject);
+        artifactObject.add("data", dataJsonObject);
+        return artifactObject;
     }
 
-    private static JsonObject convertModelToJsonObject(Map targetModel) {
+    private static JsonObject convertMapToJsonObject(Map targetModel) {
         JsonObject model = gson.toJsonTree(targetModel, targetModel.getClass()).getAsJsonObject();
         return model;
     }
@@ -164,64 +316,5 @@ public class ApiJsonConverterUtil {
         return  targetModelJsonObject;
     }
 
-    /** Used in 3.2.0 to 4.2.0 mapping. Adds
-     * payloadSchema : string
-     * uriMapping : string
-     * operationPolicies : object (API Operation Level Policies)
-     */
-    private static JsonArray getUpdatedOperations(JsonArray operationsArray) {
-        if (operationsArray != null) {
-            for (JsonElement operation : operationsArray) {
-                operation.getAsJsonObject().add("payloadSchema", null);
-                operation.getAsJsonObject().add("uriMapping", null);
-                JsonObject operationPolicies = new JsonObject();
-                operationPolicies.add(Constants.AJ_POLICY_TYPE_REQUEST, new JsonArray());
-                operationPolicies.add(Constants.AJ_POLICY_TYPE_RESPONSE, new JsonArray());
-                operationPolicies.add(Constants.AJ_POLICY_TYPE_FAULT, new JsonArray());
-                operation.getAsJsonObject().add(Constants.AJ_OPERATION_POLICIES, operationPolicies);
-            }
-            return operationsArray;
-        }
-        return null;
-    }
-
-    /**
-     * Map mediation policies to API Level polices
-     */
-    private static JsonObject getApiPolicyMapping(JsonArray mediationPolicyArray) {
-
-        if (mediationPolicyArray != null) {
-            JsonObject apiPolicyObject = new JsonObject();
-            for (JsonElement mediationPolicyElement : mediationPolicyArray) {
-                JsonObject mappedObject = new JsonObject();
-
-                //required field in 3.2.0
-                mappedObject.add("policyName", mediationPolicyElement.getAsJsonObject().get("name"));
-
-                if (mediationPolicyElement.getAsJsonObject().keySet().contains("id")) {
-                    mappedObject.add("policyId", mediationPolicyElement.getAsJsonObject().get("id"));
-                } else {
-                    mappedObject.add("policyId",null);
-                }
-                mappedObject.addProperty("policyVersion", "v1");
-                mappedObject.add("parameters", new JsonObject());
-
-                JsonArray policyArray = new JsonArray();
-                policyArray.add(mappedObject);
-                if ("in".equalsIgnoreCase(mediationPolicyElement.getAsJsonObject()
-                        .get(Constants.AJ_POLICY_TYPE).getAsString())) {
-                    apiPolicyObject.add(Constants.AJ_POLICY_TYPE_REQUEST, policyArray);
-                } else if ("out".equalsIgnoreCase(mediationPolicyElement.getAsJsonObject()
-                        .get(Constants.AJ_POLICY_TYPE).getAsString())) {
-                    apiPolicyObject.add(Constants.AJ_POLICY_TYPE_RESPONSE, policyArray);
-                } else if ("fault".equalsIgnoreCase(mediationPolicyElement.getAsJsonObject()
-                        .get(Constants.AJ_POLICY_TYPE).getAsString())) {
-                    apiPolicyObject.add(Constants.AJ_POLICY_TYPE_FAULT, policyArray);
-                }
-            }
-            return apiPolicyObject;
-        }
-        return null;
-    }
 
 }

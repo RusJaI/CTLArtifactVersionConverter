@@ -24,6 +24,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.text.ParseException;
 import javax.ws.rs.core.Response;
 
 public class ArtifactConvertApiServiceImpl implements ArtifactConvertApiService {
@@ -107,6 +108,8 @@ public class ArtifactConvertApiServiceImpl implements ArtifactConvertApiService 
         } catch (IOException e) {
             log.error("Error occurred while processing the json file", e);
             return Response.serverError().entity("Error occurred while processing the json file").build();
+        } catch (ParseException e) {
+            return Response.serverError().entity("Error occurred while processing the lastUpdatedTime values").build();
         }
 
     }

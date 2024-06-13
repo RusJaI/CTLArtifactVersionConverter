@@ -10,6 +10,7 @@ import org.wso2.carbon.apimgt.ctl.artifact.converter.util.Constants;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.ParseException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -39,7 +40,7 @@ public class ApiJsonConverter {
 
     }
 
-    public void convert() throws IOException, CTLArtifactConversionException {
+    public void convert() throws IOException, CTLArtifactConversionException, ParseException {
         JsonObject resultingJson = null;
         Map sourceApiMap = objectMapper.readValue(sourceFile, new TypeReference<LinkedHashMap>(){});
         if (srcVersion.equals(Constants.V320)) {
