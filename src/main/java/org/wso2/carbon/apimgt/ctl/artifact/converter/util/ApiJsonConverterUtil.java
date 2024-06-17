@@ -53,7 +53,7 @@ public class ApiJsonConverterUtil {
         SimpleDateFormat formatter = new SimpleDateFormat("MMM dd, yyyy, HH:mm:ss aa");
         SimpleDateFormat newFormatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.s");
         Date latestUpdatedDate = formatter.parse(dateTimeString);
-        dataMap.put("lastUpdatedTimestamp", latestUpdatedDate.getTime());
+        dataMap.put("lastUpdatedTimestamp", String.valueOf(latestUpdatedDate.getTime()));
         dataMap.put("lastUpdatedTime", newFormatter.format(latestUpdatedDate));
 
         /**
@@ -100,7 +100,8 @@ public class ApiJsonConverterUtil {
         if (apiMap.get("transports") != null) {
             dataMap.put("transport", apiMap.get("transports").toString().split(","));
         }
-        dataMap.put("subscriptionAvailability", apiMap.get("subscriptionAvailability"));
+        dataMap.put("subscriptionAvailability", apiMap.get("subscriptionAvailability") == null ? "" :
+                apiMap.get("subscriptionAvailability").toString().toUpperCase());
         dataMap.put("subscriptionAvailableTenants", new JsonArray());
         dataMap.put("corsConfiguration", apiMap.get("corsConfiguration"));
 
@@ -136,10 +137,6 @@ public class ApiJsonConverterUtil {
             dataMap.put(Constants.AJ_kEY_MANAGERS, new JsonArray());
         } else {
             dataMap.put(Constants.AJ_kEY_MANAGERS, apiMap.get(Constants.AJ_kEY_MANAGERS));
-        }
-
-        if (apiMap.get("createdTime") != null) {
-            dataMap.put("createdTime", apiMap.get("createdTime"));
         }
 
         /**
@@ -210,7 +207,10 @@ public class ApiJsonConverterUtil {
 /***------------------------------------------------------------------------------------------------------------------*/
 
         if (isApiProduct) {
-            dataMap.put("state", apiMap.get("status"));
+            dataMap.put("state", apiMap.get("state"));
+            if (apiMap.get("createdTime") != null) {
+                dataMap.put("createdTime", String.valueOf(formatter.parse(apiMap.get("createdTime").toString())));
+            }
             String productResourcesString = apiMap.get("productResources") == null ? null :
                     gson.toJson(apiMap.get("productResources"), ArrayList.class);
             JsonArray productResources = productResourcesString == null ? null :
@@ -285,6 +285,9 @@ public class ApiJsonConverterUtil {
             }
 
         } else {
+            if (apiMap.get("createdTime") != null) {
+                dataMap.put("createdTime", apiMap.get("createdTime"));
+            }
             dataMap.put("enableSubscriberVerification", false);
             dataMap.put("type", apiMap.get("type"));
             dataMap.put("lifeCycleStatus", apiMap.get("status"));
