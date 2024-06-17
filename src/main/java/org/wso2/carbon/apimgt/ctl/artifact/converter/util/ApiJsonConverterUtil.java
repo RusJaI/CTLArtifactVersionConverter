@@ -38,8 +38,13 @@ public class ApiJsonConverterUtil {
 
         if (idObject != null) {
             dataMap.put("id", apiMap.get("uuid") == null ? null : apiMap.get("uuid"));
-            dataMap.put("name", idObject.has("apiName") ? idObject.get("apiName")
-                    : null);
+            if (isApiProduct) {
+                dataMap.put("name", idObject.has("apiProductName") ? idObject.get("apiProductName")
+                        : null);
+            } else {
+                dataMap.put("name", idObject.has("apiName") ? idObject.get("apiName")
+                        : null);
+            }
             dataMap.put("version", idObject.has("version") ? idObject.get("version")
                     : null);
             dataMap.put("provider", idObject.has("providerName") ? idObject.get("providerName")
@@ -209,7 +214,8 @@ public class ApiJsonConverterUtil {
         if (isApiProduct) {
             dataMap.put("state", apiMap.get("state"));
             if (apiMap.get("createdTime") != null) {
-                dataMap.put("createdTime", String.valueOf(formatter.parse(apiMap.get("createdTime").toString())));
+                dataMap.put("createdTime",
+                        String.valueOf(formatter.parse(apiMap.get("createdTime").toString()).getTime()));
             }
             String productResourcesString = apiMap.get("productResources") == null ? null :
                     gson.toJson(apiMap.get("productResources"), ArrayList.class);
@@ -331,11 +337,13 @@ public class ApiJsonConverterUtil {
             dataMap.put("apiPolicies", apiPoliciesObject);
 
             /**
-             * Map endpointConfig
+             * Map endpointConfig only if not null
              */
-            JsonObject endpointConfigJson = apiMap.get("endpointConfig") == null ? null :
-                    gson.fromJson(apiMap.get("endpointConfig").toString(), JsonObject.class);
-            dataMap.put("endpointConfig", endpointConfigJson);
+            if (apiMap.get("endpointConfig") != null) {
+                JsonObject endpointConfigJson =
+                        gson.fromJson(apiMap.get("endpointConfig").toString(), JsonObject.class);
+                dataMap.put("endpointConfig", endpointConfigJson);
+            }
 
             if (apiMap.get("implementation") != null) {
                 dataMap.put("endpointImplementationType", apiMap.get("implementation"));
