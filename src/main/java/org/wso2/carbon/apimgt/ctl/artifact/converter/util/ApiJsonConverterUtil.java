@@ -211,7 +211,78 @@ public class ApiJsonConverterUtil {
 
         if (isApiProduct) {
             dataMap.put("state", apiMap.get("status"));
+            String productResourcesString = apiMap.get("productResources") == null ? null :
+                    gson.toJson(apiMap.get("productResources"), ArrayList.class);
+            JsonArray productResources = productResourcesString == null ? null :
+                    gson.fromJson(productResourcesString, JsonArray.class);
+            if (productResources != null) {
+                Map<String, JsonObject> apiObjectMap = new HashMap<String, JsonObject>();
 
+                for (JsonElement productResource : productResources) {
+                    JsonObject productResourceJson = productResource.getAsJsonObject();
+                    JsonObject apiInstanceObject = new JsonObject();
+                    if (apiObjectMap.get(productResourceJson.get("apiName").getAsString()) == null) {
+                        apiInstanceObject.addProperty("name", productResourceJson.get("apiName").getAsString());
+                        apiInstanceObject.addProperty("apiId", productResourceJson.get("apiId").getAsString());
+                        apiInstanceObject.addProperty("version", productResourceJson.get("apiIdentifier")
+                                .getAsJsonObject().get("version").getAsString());
+                        apiInstanceObject.add("operations", new JsonArray());
+                        apiObjectMap.put(productResourceJson.get("apiName").getAsString(), apiInstanceObject);
+                    }
+
+                    //add operations info to the apiInstanceObject
+                    JsonObject operationObject = new JsonObject();
+                    JsonObject uriTemplateObject = productResourceJson.getAsJsonObject("uriTemplate");
+                    String inSequence = productResourceJson.get("inSequenceName").getAsString();
+                    String outSequence = productResourceJson.get("outSequenceName").getAsString();
+                    String faultSequence = productResourceJson.get("faultSequenceName").getAsString();
+
+                    operationObject.addProperty("id", "");
+                    operationObject.addProperty("target", uriTemplateObject.get("uriTemplate").getAsString());
+                    operationObject.addProperty("verb", uriTemplateObject.get("httpVerb").getAsString());
+                    operationObject.addProperty("authType", uriTemplateObject.get("authType").getAsString());
+                    operationObject.addProperty("throttlingPolicy",
+                            uriTemplateObject.get("throttlingTier").getAsString());
+
+                    JsonObject operationPolicyObject = new JsonObject();
+                    if (inSequence != null) {
+                        JsonObject inObject = new JsonObject();
+                        inObject.addProperty(Constants.AJ_POLICY_NAME, inSequence);
+                        inObject.addProperty(Constants.AJ_POLICY_VERSION, "v1");
+                        inObject.add(Constants.AJ_POLICY_ID, null);
+                        inObject.add(Constants.AJ_POLICY_PARAMS, new JsonObject());
+                        JsonArray policyArray = new JsonArray();
+                        policyArray.add(inObject);
+                        operationPolicyObject.add("request", policyArray);
+                    }
+
+                    if (outSequence != null) {
+                        JsonObject outObject = new JsonObject();
+                        outObject.addProperty(Constants.AJ_POLICY_NAME, outSequence);
+                        outObject.addProperty(Constants.AJ_POLICY_VERSION, "v1");
+                        outObject.add(Constants.AJ_POLICY_ID, null);
+                        outObject.add(Constants.AJ_POLICY_PARAMS, new JsonObject());
+                        JsonArray policyArray = new JsonArray();
+                        policyArray.add(outObject);
+                        operationPolicyObject.add("response", policyArray);
+                    }
+
+                    if (faultSequence != null) {
+                        JsonObject faultObject = new JsonObject();
+                        faultObject.addProperty(Constants.AJ_POLICY_NAME, faultSequence);
+                        faultObject.addProperty(Constants.AJ_POLICY_VERSION, "v1");
+                        faultObject.add(Constants.AJ_POLICY_ID, null);
+                        faultObject.add(Constants.AJ_POLICY_PARAMS, new JsonObject());
+                        JsonArray policyArray = new JsonArray();
+                        policyArray.add(faultObject);
+                        operationPolicyObject.add("fault", policyArray);
+                    }
+                    operationObject.add("operationPolicies", operationPolicyObject);
+                    apiObjectMap.get(productResourceJson.get("apiName").getAsString())
+                            .getAsJsonArray("operations").add(operationObject);
+                }
+                dataMap.put("apis", apiObjectMap.values().toArray());
+            }
 
         } else {
             dataMap.put("enableSubscriberVerification", false);
