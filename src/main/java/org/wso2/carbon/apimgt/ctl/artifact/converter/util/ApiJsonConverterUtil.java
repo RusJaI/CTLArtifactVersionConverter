@@ -54,6 +54,18 @@ public class ApiJsonConverterUtil {
         dataMap.put("context", apiMap.get("context"));
         dataMap.put("tags", apiMap.get("tags"));
 
+        if (apiMap.get("description") != null) {
+            dataMap.put("description", apiMap.get("description"));
+        }
+
+        if (apiMap.get("workflowStatus") != null) {
+            dataMap.put("workflowStatus", apiMap.get("workflowStatus"));
+        }
+
+        if (apiMap.get("apiLevelPolicy") != null) {
+            dataMap.put("apiThrottlingPolicy", apiMap.get("apiLevelPolicy"));
+        }
+
         String dateTimeString = apiMap.get("lastUpdated") == null ? null : apiMap.get("lastUpdated").toString();
         SimpleDateFormat formatter = new SimpleDateFormat("MMM dd, yyyy, HH:mm:ss aa");
         SimpleDateFormat newFormatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.s");
@@ -297,6 +309,23 @@ public class ApiJsonConverterUtil {
             dataMap.put("enableSubscriberVerification", false);
             dataMap.put("type", apiMap.get("type"));
             dataMap.put("lifeCycleStatus", apiMap.get("status"));
+
+            // TODO : wsdlInfo in 4.2.0 not in 3.2.0
+
+            if (apiMap.get("wsdlUrl") != null) {
+                dataMap.put("wsdlUrl", apiMap.get("wsdlUrl"));
+            }
+
+            JsonObject maxTpsObject = new JsonObject();
+            if (apiMap.get("productionMaxTps") != null) {
+                maxTpsObject.addProperty("production", apiMap.get("productionMaxTps").toString());
+            }
+            if (apiMap.get("sandboxMaxTps") != null) {
+                maxTpsObject.addProperty("sandbox", apiMap.get("sandboxMaxTps").toString());
+            }
+            if (!maxTpsObject.isEmpty()) {
+                dataMap.put("maxTps", maxTpsObject);
+            }
 
             /**
              * Map API Policies
