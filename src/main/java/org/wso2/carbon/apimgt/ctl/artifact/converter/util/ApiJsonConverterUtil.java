@@ -69,9 +69,11 @@ public class ApiJsonConverterUtil {
         String dateTimeString = apiMap.get("lastUpdated") == null ? null : apiMap.get("lastUpdated").toString();
         SimpleDateFormat formatter = new SimpleDateFormat("MMM dd, yyyy, HH:mm:ss aa");
         SimpleDateFormat newFormatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.s");
-        Date latestUpdatedDate = formatter.parse(dateTimeString);
-        dataMap.put("lastUpdatedTimestamp", String.valueOf(latestUpdatedDate.getTime()));
-        dataMap.put("lastUpdatedTime", newFormatter.format(latestUpdatedDate));
+        if (dateTimeString != null) {
+            Date latestUpdatedDate = formatter.parse(dateTimeString);
+            dataMap.put("lastUpdatedTimestamp", String.valueOf(latestUpdatedDate.getTime()));
+            dataMap.put("lastUpdatedTime", newFormatter.format(latestUpdatedDate));
+        }
 
         /**
          * Map availableTiers
@@ -111,7 +113,9 @@ public class ApiJsonConverterUtil {
                     apiMap.get(Constants.AJ_API_TECHNICAL_OWNER_EMAIL).toString());
         }
         dataMap.put(Constants.AJ_BUSINESS_INFORMATION, businessInfoJson);
-        dataMap.put("visibility", apiMap.get("visibility").toString().toUpperCase());
+        if (apiMap.get("visibility") != null) {
+            dataMap.put("visibility", apiMap.get("visibility").toString().toUpperCase());
+        }
         dataMap.put("visibleRoles", new JsonArray());
         dataMap.put("visibleTenants", new JsonArray());
         if (apiMap.get("transports") != null) {
